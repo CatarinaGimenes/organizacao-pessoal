@@ -1,0 +1,64 @@
+.form {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-2);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.85rem;
+  color: var(--color-neutral-900);
+  background-color: var(--color-neutral-50);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: var(--radius-full);
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.input::placeholder {
+  color: var(--color-neutral-500);
+}
+
+.input:hover {
+  border-color: var(--color-rose-200);
+}
+
+.input:focus {
+  background-color: var(--color-neutral-0);
+  border-color: var(--color-rose-300);
+}
+
+.button {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-content: center;
+  padding: 0;
+  font-size: 1.15rem;
+  line-height: 1;
+  color: var(--color-rose-700);
+  background-color: var(--color-rose-100);
+  border: 1px solid var(--color-rose-200);
+  border-radius: var(--radius-full);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.button:hover:not(:disabled) {
+  background-color: var(--color-rose-200);
+  border-color: var(--color-rose-300);
+}
+
+.button:disabled {
+  color: var(--color-neutral-400);
+  background-color: var(--color-neutral-100);
+  border-color: var(--color-neutral-100);
+  cursor: default;
+}

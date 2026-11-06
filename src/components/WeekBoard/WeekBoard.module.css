@@ -1,0 +1,50 @@
+.board {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: var(--space-3);
+  scrollbar-color: var(--color-rose-200) transparent;
+}
+
+/* Cada coluna ocupa uma largura fixa e confortável durante a rolagem */
+.slot {
+  flex: 0 0 clamp(240px, 26vw, 300px);
+  scroll-snap-align: start;
+  display: flex;
+}
+
+.slot > * {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Telas largas: as 7 colunas cabem lado a lado ------------------------- */
+@media (min-width: 1440px) {
+  .board {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    overflow-x: visible;
+    scroll-snap-type: none;
+  }
+
+  .slot {
+    flex: initial;
+  }
+}
+
+/* Mobile: colunas empilhadas ------------------------------------------- */
+@media (max-width: 767px) {
+  .board {
+    flex-direction: column;
+    overflow-x: visible;
+    scroll-snap-type: none;
+    gap: var(--space-3);
+  }
+
+  .slot {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+}

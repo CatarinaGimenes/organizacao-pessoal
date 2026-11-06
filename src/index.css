@@ -1,0 +1,107 @@
+/* ==========================================================================
+   Design tokens globais + reset
+   Paleta: rosa pastel + verde pastel + branco + neutros
+   ========================================================================== */
+
+:root {
+  /* Rosa pastel */
+  --color-rose-50: #fdf1f3;
+  --color-rose-100: #f8dce1;
+  --color-rose-200: #f3cbd3;
+  --color-rose-300: #efb7c0;
+  --color-rose-400: #e29aa7;
+  --color-rose-700: #a84e60;
+
+  /* Verde pastel */
+  --color-green-50: #f1f7f0;
+  --color-green-100: #e4f0e2;
+  --color-green-200: #cfe5cc;
+  --color-green-300: #b9d8b4;
+  --color-green-600: #5f8a5a;
+  --color-green-700: #4e7a49;
+
+  /* Neutros */
+  --color-neutral-0: #ffffff;
+  --color-neutral-50: #faf8f8;
+  --color-neutral-100: #f2eeee;
+  --color-neutral-200: #e4dedf;
+  --color-neutral-400: #a9a1a3;
+  --color-neutral-500: #7a7274;
+  --color-neutral-600: #6b6365;
+  --color-neutral-900: #3d3839;
+
+  /* Raios */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-full: 999px;
+
+  /* Espaçamentos */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* Elevação */
+  --shadow-soft: 0 2px 8px rgba(61, 56, 57, 0.06);
+  --shadow-card: 0 6px 20px rgba(61, 56, 57, 0.08);
+
+  /* Tipografia */
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, sans-serif;
+
+  /* Movimento */
+  --transition-fast: 160ms ease;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100%;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--color-neutral-900);
+  background-color: var(--color-neutral-50);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-rose-400);
+  outline-offset: 2px;
+}
