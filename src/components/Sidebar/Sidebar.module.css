@@ -1,0 +1,144 @@
+/* ==========================================================================
+   Sidebar: marca + navegação
+   Mobile-first: abaixo de 768px é um drawer sobreposto; acima, coluna fixa.
+   ========================================================================== */
+
+/* Fundo escurecido do drawer (mobile) ------------------------------------- */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background-color: rgba(61, 56, 57, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-fast);
+}
+
+.backdrop[data-visible='true'] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Painel ------------------------------------------------------------------- */
+.sidebar {
+  position: fixed;
+  inset-block: 0;
+  left: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  width: min(82vw, 300px);
+  padding: var(--space-4);
+  background-color: var(--color-neutral-0);
+  border-right: 1px solid var(--color-neutral-100);
+  box-shadow: var(--shadow-card);
+  transform: translateX(-100%);
+  transition: transform var(--transition-fast);
+}
+
+.sidebar[data-open='true'] {
+  transform: none;
+}
+
+/* Marca -------------------------------------------------------------------- */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.logo {
+  display: grid;
+  place-content: center;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  color: var(--color-rose-700);
+  background-color: var(--color-rose-100);
+  border: 1px solid var(--color-rose-200);
+  border-radius: var(--radius-md);
+}
+
+.brandName {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--color-neutral-900);
+}
+
+.close {
+  display: grid;
+  place-content: center;
+  width: 32px;
+  height: 32px;
+  margin-left: auto;
+  padding: 0;
+  color: var(--color-neutral-500);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.close:hover {
+  color: var(--color-rose-700);
+  border-color: var(--color-rose-200);
+}
+
+/* Navegação ---------------------------------------------------------------- */
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.nav a {
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-neutral-600);
+  text-decoration: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.nav a:hover {
+  color: var(--color-rose-700);
+  background-color: var(--color-rose-50);
+}
+
+.nav a[aria-current='page'] {
+  font-weight: 600;
+  color: var(--color-rose-700);
+  background-color: var(--color-rose-100);
+  border-color: var(--color-rose-200);
+}
+
+/* Desktop (≥768px): sidebar fixa, sem drawer ------------------------------- */
+@media (min-width: 768px) {
+  .backdrop {
+    display: none;
+  }
+
+  .sidebar {
+    position: sticky;
+    top: 0;
+    left: auto;
+    inset-block: auto;
+    width: auto;
+    height: 100vh;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .close {
+    display: none;
+  }
+}

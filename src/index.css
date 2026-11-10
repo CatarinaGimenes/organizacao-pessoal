@@ -1,24 +1,32 @@
 /* ==========================================================================
    Design tokens globais + reset
-   Paleta: rosa pastel + verde pastel + branco + neutros
+   Paleta: rosa pastel + verde pastel + amarelo (reserva) + branco + neutros
    ========================================================================== */
 
 :root {
-  /* Rosa pastel */
-  --color-rose-50: #fdf1f3;
-  --color-rose-100: #f8dce1;
-  --color-rose-200: #f3cbd3;
-  --color-rose-300: #efb7c0;
-  --color-rose-400: #e29aa7;
-  --color-rose-700: #a84e60;
+  /* Rosa pastel (base #ffcfed) — interação e destaque */
+  --color-rose-50: #fff7fc;
+  --color-rose-100: #ffe8f7;
+  --color-rose-200: #ffcfed;
+  --color-rose-300: #ffb2e4;
+  --color-rose-400: #ff47b2;
+  --color-rose-700: #a80e68;
 
-  /* Verde pastel */
-  --color-green-50: #f1f7f0;
-  --color-green-100: #e4f0e2;
-  --color-green-200: #cfe5cc;
-  --color-green-300: #b9d8b4;
-  --color-green-600: #5f8a5a;
-  --color-green-700: #4e7a49;
+  /* Verde pastel (base #d4ffcb) — conclusão e detalhes */
+  --color-green-50: #f4fff2;
+  --color-green-100: #e6ffdf;
+  --color-green-200: #d4ffcb;
+  --color-green-300: #b6ffa6;
+  --color-green-600: #35a31f;
+  --color-green-700: #257b14;
+
+  /* Amarelo pastel (base #fffdc1) — reserva, sem uso na UI ainda */
+  --color-yellow-50: #fffff5;
+  --color-yellow-100: #fffee5;
+  --color-yellow-200: #fffdc1;
+  --color-yellow-300: #fffca3;
+  --color-yellow-600: #b8b41f;
+  --color-yellow-700: #8f8b12;
 
   /* Neutros */
   --color-neutral-0: #ffffff;
