@@ -1,5 +1,6 @@
 import React from 'react'
 import { renderToString } from 'react-dom/server'
+import { MemoryRouter } from 'react-router-dom'
 import { createServer } from 'vite'
 import {
   addTask,
@@ -8,6 +9,14 @@ import {
   removeTask,
   toggleTask,
 } from '../src/state/board.js'
+import {
+  addTransaction,
+  calculateSummary,
+  createInitialTransactions,
+  removeTransaction,
+  selectTransactions,
+} from '../src/state/finance.js'
+import { parseAmountToCents } from '../src/utils/currency.js'
 
 const results = []
 const check = (name, ok) => results.push([name, ok])
@@ -70,6 +79,94 @@ check(
 check('mover tarefa inexistente não altera', moveTask(abc, 'monday', 'nope', 'friday', 0) === abc)
 check('estado original preservado', textsOf(abc, 'monday').join() === 'A,B,C')
 
+/* ----------------------------------------------- regras financeiras */
+
+const noTransactions = createInitialTransactions()
+check('lista financeira inicia vazia', noTransactions.length === 0)
+
+const gasto = addTransaction(noTransactions, {
+  type: 'gasto',
+  description: '  Supermercado  ',
+  amount: 12550,
+  category: 'alimentacao',
+})
+check(
+  'cadastra gasto e apara a descrição',
+  gasto.length === 1 && gasto[0].description === 'Supermercado',
+)
+check(
+  'novo gasto mantém tipo e categoria',
+  gasto[0].type === 'gasto' && gasto[0].category === 'alimentacao',
+)
+check('cadastro financeiro é imutável', noTransactions.length === 0)
+
+const gastoInput = { type: 'gasto', description: 'Luz', amount: 500, category: 'contas' }
+check('valor zero é ignorado', addTransaction(noTransactions, { ...gastoInput, amount: 0 }) === noTransactions)
+check('valor negativo é ignorado', addTransaction(noTransactions, { ...gastoInput, amount: -100 }) === noTransactions)
+check('valor não inteiro é ignorado', addTransaction(noTransactions, { ...gastoInput, amount: 10.5 }) === noTransactions)
+check('descrição vazia é ignorada', addTransaction(noTransactions, { ...gastoInput, description: '   ' }) === noTransactions)
+check(
+  'categoria de outro tipo é ignorada (gasto não aceita "salario")',
+  addTransaction(noTransactions, { ...gastoInput, category: 'salario' }) === noTransactions,
+)
+check(
+  'tipo inválido é ignorado',
+  addTransaction(noTransactions, { ...gastoInput, type: 'dividendo' }) === noTransactions,
+)
+
+const salario = addTransaction(gasto, {
+  type: 'ganho',
+  description: 'Salário',
+  amount: 300000,
+  category: 'salario',
+})
+check(
+  'cadastra ganho com categoria da lista de ganhos',
+  salario.length === 2 && salario[1].type === 'ganho' && salario[1].category === 'salario',
+)
+check(
+  'removeTransaction exclui pelo id',
+  removeTransaction(salario, gasto[0].id).length === 1,
+)
+check(
+  'remover id inexistente mantém o referencial',
+  removeTransaction(salario, 'nope') === salario,
+)
+
+check('seleção por tipo pega todos os gastos', selectTransactions(salario, 'gasto').length === 1)
+check(
+  'seleção sem filtro devolve todos do tipo',
+  selectTransactions(salario, 'ganho', 'all').length === 1,
+)
+check(
+  'filtro por categoria devolve só a categoria pedida',
+  selectTransactions(
+    addTransaction(salario, { type: 'gasto', description: 'Cinema', amount: 6000, category: 'lazer' }),
+    'gasto',
+    'lazer',
+  ).every((transaction) => transaction.category === 'lazer'),
+)
+check(
+  'filtro por categoria sem correspondência devolve lista vazia',
+  selectTransactions(salario, 'gasto', 'saude').length === 0,
+)
+
+const positive = calculateSummary(salario)
+check(
+  'resumo soma gastos e ganhos em centavos',
+  positive.gastos === 12550 && positive.ganhos === 300000,
+)
+check('saldo = ganhos - gastos', positive.saldo === 287450)
+check('saldo negativo quando gastos > ganhos', calculateSummary(gasto).saldo === -12550)
+check('resumo de lista vazia é zero', calculateSummary(noTransactions).saldo === 0)
+check(
+  'leitura de valor no formato brasileiro',
+  parseAmountToCents('1.234,56') === 123456 &&
+    parseAmountToCents('12,34') === 1234 &&
+    parseAmountToCents('12.34') === 1234 &&
+    parseAmountToCents('abc') === 0,
+)
+
 /* ------------------------------------------------------------- render */
 
 const server = await createServer({
@@ -82,7 +179,15 @@ const server = await createServer({
 
 try {
   const { default: App } = await server.ssrLoadModule('/src/App.jsx')
-  const html = renderToString(React.createElement(App))
+  // O App exige contexto de roteamento; a rota "/" renderiza a tela semanal,
+  // então as asserções abaixo continuam válidas.
+  const html = renderToString(
+    React.createElement(
+      MemoryRouter,
+      { initialEntries: ['/'] },
+      React.createElement(App),
+    ),
+  )
 
   check('título presente', html.includes('Minha Semana'))
   check('7 colunas renderizadas', (html.match(/aria-label="Tarefas de /g) ?? []).length === 7)
@@ -90,6 +195,29 @@ try {
   check('7 formulários de adicionar', (html.match(/type="text"/g) ?? []).length === 7)
   check('estado vazio visível', html.includes('Arraste ou adicione uma tarefa'))
   check('resumo de tarefas', html.includes('tarefas concluídas'))
+
+  // Regra de cor do saldo — componente isolado, fora do roteamento.
+  const { default: FinanceSummary } = await server.ssrLoadModule(
+    '/src/components/Finance/FinanceSummary/FinanceSummary.jsx',
+  )
+  const negativeSaldo = renderToString(
+    React.createElement(FinanceSummary, {
+      summary: { gastos: 50000, ganhos: 10000, saldo: -40000 },
+    }),
+  )
+  const positiveSaldo = renderToString(
+    React.createElement(FinanceSummary, {
+      summary: { gastos: 10000, ganhos: 50000, saldo: 40000 },
+    }),
+  )
+  check(
+    'saldo negativo é marcado como negativo (vermelho)',
+    negativeSaldo.includes('data-saldo="negativo"'),
+  )
+  check(
+    'saldo positivo é marcado como positivo (verde)',
+    positiveSaldo.includes('data-saldo="positivo"'),
+  )
 } finally {
   await server.close()
 }

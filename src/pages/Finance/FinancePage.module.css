@@ -1,0 +1,48 @@
+/* Cabeçalho (mesmo desenho do cabeçalho da semana) ----------------------- */
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  /* Amarelo: a tela financeira tem acento próprio (rosa é da semana) */
+  color: var(--color-yellow-700);
+}
+
+.title {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.summaryPill {
+  padding: var(--space-2) var(--space-4);
+  font-size: 0.85rem;
+  color: var(--color-neutral-600);
+  background-color: var(--color-neutral-0);
+  border: 1px solid var(--color-neutral-100);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-soft);
+}
+
+/* Duas listas lado a lado ------------------------------------------------ */
+.lists {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+@media (max-width: 767px) {
+  .lists {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

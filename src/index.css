@@ -28,6 +28,13 @@
   --color-yellow-600: #b8b41f;
   --color-yellow-700: #8f8b12;
 
+  /* Vermelho — saldo negativo e valores de gasto */
+  --color-red-50: #fff1f0;
+  --color-red-100: #ffe1df;
+  --color-red-200: #ffc9c5;
+  --color-red-600: #d92d20;
+  --color-red-700: #b42318;
+
   /* Neutros */
   --color-neutral-0: #ffffff;
   --color-neutral-50: #faf8f8;

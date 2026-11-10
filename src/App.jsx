@@ -1,21 +1,24 @@
 import { useCallback, useState } from 'react'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 import styles from './App.module.css'
 import Sidebar from './components/Sidebar/Sidebar.jsx'
-import WeekBoard from './components/WeekBoard/WeekBoard.jsx'
+import WeekPage from './pages/Week/WeekPage.jsx'
+import FinancePage from './pages/Finance/FinancePage.jsx'
 import { useBoard } from './hooks/useBoard.js'
+import { useFinance } from './hooks/useFinance.js'
 
+/**
+ * Shell do aplicativo: topbar, sidebar e conteúdo roteado.
+ * Os hooks ficam AQUI (e não dentro das páginas) porque o estado é só em
+ * memória — se vivessem nas páginas, navegar entre telas perdia os dados.
+ */
 function App() {
   const { board, addTask, toggleTask, removeTask, moveTask } = useBoard()
+  const { transactions, addTransaction, removeTransaction } = useFinance()
   const [menuOpen, setMenuOpen] = useState(false)
 
   const closeMenu = useCallback(() => setMenuOpen(false), [])
-
-  const total = board.reduce((count, day) => count + day.tasks.length, 0)
-  const done = board.reduce(
-    (count, day) => count + day.tasks.filter((task) => task.done).length,
-    0,
-  )
 
   return (
     <div className={styles.app}>
@@ -37,25 +40,32 @@ function App() {
 
       <main className={styles.main}>
         <div className={styles.content}>
-          <header className={styles.header}>
-            <div>
-              <p className={styles.eyebrow}>Organização pessoal</p>
-              <h1 className={styles.title}>Minha Semana</h1>
-            </div>
-            <p className={styles.summary}>
-              <strong className={styles.summaryNumber}>{done}</strong> de{' '}
-              <strong className={styles.summaryNumber}>{total}</strong>{' '}
-              {total === 1 ? 'tarefa concluída' : 'tarefas concluídas'}
-            </p>
-          </header>
-
-          <WeekBoard
-            board={board}
-            onAdd={addTask}
-            onToggle={toggleTask}
-            onRemove={removeTask}
-            onMove={moveTask}
-          />
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <WeekPage
+                  board={board}
+                  onAdd={addTask}
+                  onToggle={toggleTask}
+                  onRemove={removeTask}
+                  onMove={moveTask}
+                />
+              }
+            />
+            <Route
+              path="/financas"
+              element={
+                <FinancePage
+                  transactions={transactions}
+                  onAdd={addTransaction}
+                  onRemove={removeTransaction}
+                />
+              }
+            />
+            {/* Qualquer rota desconhecida volta para a semana */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
         </div>
       </main>
     </div>

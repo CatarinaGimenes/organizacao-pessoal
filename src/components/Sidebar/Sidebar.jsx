@@ -1,11 +1,13 @@
 import { useEffect } from 'react'
+import { NavLink } from 'react-router-dom'
 import { Sticker, X } from 'lucide-react'
 import styles from './Sidebar.module.css'
 
 /**
- * Sidebar com a marca "MyPlanner" e a navegação.
+ * Sidebar com a marca "MyPlanner" e a navegação entre telas.
  * Em telas abaixo de 768px vira drawer sobreposto, controlado pelas props
  * `open`/`onClose` (o botão hambúrguer fica na topbar do App).
+ * Os itens usam NavLink: o react-router marca `aria-current="page"` sozinho.
  */
 function Sidebar({ open, onClose }) {
   // Fecha o drawer com a tecla ESC — só roda no cliente, seguro para SSR
@@ -53,9 +55,12 @@ function Sidebar({ open, onClose }) {
 
         {/* Navegação ------------------------------------------------------------ */}
         <nav className={styles.nav} aria-label="Navegação principal">
-          <a href="/" aria-current="page" onClick={onClose}>
+          <NavLink to="/" end onClick={onClose}>
             Planejamento Semanal
-          </a>
+          </NavLink>
+          <NavLink to="/financas" onClick={onClose}>
+            Planejamento Financeiro
+          </NavLink>
         </nav>
       </aside>
     </>

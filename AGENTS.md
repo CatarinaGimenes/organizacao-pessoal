@@ -19,28 +19,52 @@ Ordem de verificação antes de concluir: `npm run lint` → `npm run check` →
 
 É um script ad-hoc, não um framework. Dois efeitos colaterais que causam erros:
 
-1. **Renderiza `App.jsx` via SSR** (Vite `ssrLoadModule` + `renderToString`).
-   Componentes devem permanecer seguros para SSR: nada de `window`, `document`,
-   `localStorage` em escopo de módulo ou durante o render. Só `src/main.jsx`
-   pode tocar no DOM.
+1. **Renderiza `App.jsx` via SSR** (Vite `ssrLoadModule` + `renderToString`),
+   envolvido num `MemoryRouter` com a rota inicial `/` — o `App` exige
+   contexto de roteamento (`react-router-dom`) e `/` renderiza a tela
+   semanal. Componentes devem permanecer seguros para SSR: nada de `window`,
+   `document`, `localStorage` em escopo de módulo ou durante o render. Só
+   `src/main.jsx` pode tocar no DOM (é onde vive o `BrowserRouter`).
 2. **Afirma strings/markup exatos da UI.** Quebrar qualquer uma destas muda
    exige atualizar `scripts/check.mjs` junto:
-   - `aria-label="Tarefas de "` (7×), `type="text"` (7×)
+   - `aria-label="Tarefas de "` (7×) e `type="text"` (7×) — contados no HTML
+     da rota `/`; a tela financeira não renderiza ali, então os inputs dela
+     não entram na contagem
    - `>Hoje<`, `Minha Semana`, `Arraste ou adicione uma tarefa`,
      `tarefas concluídas`
+   - `data-saldo="negativo"` / `data-saldo="positivo"` (regra de cor do
+     saldo, renderizada pelo `FinanceSummary` isolado)
    - imutabilidade e casos de `moveTask` (mover para frente no mesmo dia
      ajusta o índice em `-1`)
+   - regras financeiras: validação/imutabilidade de `addTransaction`,
+     `removeTransaction`, filtro de `selectTransactions`, somas de
+     `calculateSummary` (saldo = ganhos - gastos, em centavos) e
+     `parseAmountToCents` (`'1.234,56'` → `123456`)
 
 Não existe CI nem outro test runner — `check` é a única verificação funcional.
 
 ## Arquitetura (não óbvia pelos nomes)
 
 - **Toda regra de estado é pura e imutável** em `src/state/board.js`
-  (`addTask`, `toggleTask`, `removeTask`, `moveTask`, `createInitialBoard`).
-  Nunca coloque lógica de negócio em componentes ou no hook.
-- **`src/hooks/useBoard.js` é só glue React**: estado em memória
-  (`useState`), sem persistência. Adicionar localStorage/API é alterar apenas
-  este arquivo — componentes não mudam.
+  (`addTask`, `toggleTask`, `removeTask`, `moveTask`, `createInitialBoard`)
+  e `src/state/finance.js` (`addTransaction`, `removeTransaction`,
+  `selectTransactions`, `calculateSummary`). Nunca coloque lógica de negócio
+  em componentes ou nos hooks.
+- **`src/hooks/useBoard.js` e `src/hooks/useFinance.js` são só glue React**:
+  estado em memória (`useState`), sem persistência. Adicionar localStorage/API
+  é alterar apenas o hook — componentes não mudam.
+- **Os hooks vivem no `App`, não nas páginas**: o estado é só em memória, então
+  instanciá-los dentro das páginas faria a navegação perder os dados.
+- **Roteamento via `react-router-dom`**: `BrowserRouter` em `src/main.jsx`,
+  rotas em `App.jsx` (`/` = semana, `/financas` = planejamento financeiro).
+  Telas ficam em `src/pages/`, e a Sidebar usa `NavLink` (o `aria-current` é
+  automático).
+- **Dinheiro é CENTAVOS (inteiro)** em todo o estado; a formatação
+  (`Intl` pt-BR) fica em `src/utils/currency.js` (`formatCurrency`,
+  `parseAmountToCents`). Nunca some reais com vírgula.
+- **Categorias financeiras são dados, não layout**: `src/data/finance.js` —
+  cada lista tem seu próprio filtro por categoria (estado local em
+  `TransactionList`), e o resumo é sempre geral (ignora os filtros).
 - **Drag & drop vive inteiro em `WeekBoard.jsx`**: fonte do arraste numa ref
   (`dragRef`), estado visível só guarda tarefa arrastada + coluna-alvo. O
   índice de destino sai de `event.target.closest('[data-task-id]')` (soltar
