@@ -338,4 +338,133 @@ export function calculateSummary(transactions) {
   )
 }
 
+function getMonthFromDate(value) {
+  if (!isValidDate(value)) throw new Error('date deve estar no formato AAAA-MM-DD')
+  return value.slice(0, 7)
+}
+
+export function mapMonthlyEvent(row) {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    date: row.event_date,
+    done: Boolean(row.done),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+export function mapMonthlyGoal(row) {
+  return {
+    id: row.id,
+    title: row.title,
+    done: Boolean(row.done),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+export function listMonthlyData(userId, month) {
+  getMonthBounds(month)
+  const events = db.prepare(`
+    SELECT id, title, description, event_date, done, created_at, updated_at
+    FROM monthly_events
+    WHERE user_id = ? AND event_date BETWEEN ? AND ?
+    ORDER BY event_date, created_at, id
+  `).all(userId, `${month}-01`, getMonthBounds(month).last).map(mapMonthlyEvent)
+  const goals = db.prepare(`
+    SELECT id, title, done, created_at, updated_at
+    FROM monthly_goals
+    WHERE user_id = ? AND month = ?
+    ORDER BY created_at, id
+  `).all(userId, month).map(mapMonthlyGoal)
+  return { month, events, goals }
+}
+
+export function createMonthlyEvent(userId, input) {
+  const title = typeof input?.title === 'string' ? input.title.trim() : ''
+  const description = typeof input?.description === 'string' ? input.description.trim() : ''
+  const date = input?.date
+  if (!title || title.length > 140 || description.length > 500) {
+    throw new Error('title é obrigatório e description deve ter até 500 caracteres')
+  }
+  const month = getMonthFromDate(date)
+  const id = randomUUID()
+  const timestamp = nowIso()
+  db.prepare(`
+    INSERT INTO monthly_events (id, user_id, title, description, event_date, done, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, 0, ?, ?)
+  `).run(id, userId, title, description, date, timestamp, timestamp)
+  return listMonthlyData(userId, month)
+}
+
+function getMonthlyEvent(userId, id) {
+  return db.prepare('SELECT * FROM monthly_events WHERE id = ? AND user_id = ?').get(id, userId)
+}
+
+export function updateMonthlyEvent(userId, id, input) {
+  const event = getMonthlyEvent(userId, id)
+  if (!event) throw new Error('Evento mensal não encontrado')
+  const payload = input ?? {}
+  const title = payload.title === undefined ? event.title : String(payload.title).trim()
+  const description = payload.description === undefined ? event.description : String(payload.description).trim()
+  const date = payload.date === undefined ? event.event_date : payload.date
+  if (!title || title.length > 140 || description.length > 500) throw new Error('Dados do evento inválidos')
+  const month = getMonthFromDate(date)
+  const timestamp = nowIso()
+  db.prepare(`
+    UPDATE monthly_events SET title = ?, description = ?, event_date = ?, updated_at = ? WHERE id = ?
+  `).run(title, description, date, timestamp, id)
+  return listMonthlyData(userId, month)
+}
+
+export function toggleMonthlyEvent(userId, id) {
+  const event = getMonthlyEvent(userId, id)
+  if (!event) throw new Error('Evento mensal não encontrado')
+  db.prepare('UPDATE monthly_events SET done = ?, updated_at = ? WHERE id = ?')
+    .run(event.done ? 0 : 1, nowIso(), id)
+  return listMonthlyData(userId, event.event_date.slice(0, 7))
+}
+
+export function deleteMonthlyEvent(userId, id, month) {
+  getMonthBounds(month)
+  const result = db.prepare('DELETE FROM monthly_events WHERE id = ? AND user_id = ?').run(id, userId)
+  if (result.changes === 0) throw new Error('Evento mensal não encontrado')
+  return listMonthlyData(userId, month)
+}
+
+export function createMonthlyGoal(userId, input) {
+  const title = typeof input?.title === 'string' ? input.title.trim() : ''
+  const month = input?.month
+  getMonthBounds(month)
+  if (!title || title.length > 140) throw new Error('title é obrigatório e deve ter até 140 caracteres')
+  const id = randomUUID()
+  const timestamp = nowIso()
+  db.prepare(`
+    INSERT INTO monthly_goals (id, user_id, month, title, done, created_at, updated_at)
+    VALUES (?, ?, ?, ?, 0, ?, ?)
+  `).run(id, userId, month, title, timestamp, timestamp)
+  return listMonthlyData(userId, month)
+}
+
+function getMonthlyGoal(userId, id) {
+  return db.prepare('SELECT * FROM monthly_goals WHERE id = ? AND user_id = ?').get(id, userId)
+}
+
+export function toggleMonthlyGoal(userId, id) {
+  const goal = getMonthlyGoal(userId, id)
+  if (!goal) throw new Error('Meta mensal não encontrada')
+  db.prepare('UPDATE monthly_goals SET done = ?, updated_at = ? WHERE id = ?')
+    .run(goal.done ? 0 : 1, nowIso(), id)
+  return listMonthlyData(userId, goal.month)
+}
+
+export function deleteMonthlyGoal(userId, id, month) {
+  getMonthBounds(month)
+  const result = db.prepare('DELETE FROM monthly_goals WHERE id = ? AND user_id = ?').run(id, userId)
+  if (result.changes === 0) throw new Error('Meta mensal não encontrada')
+  return listMonthlyData(userId, month)
+}
+
 export { ALL_CATEGORIES }

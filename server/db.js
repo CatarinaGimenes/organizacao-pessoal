@@ -62,6 +62,33 @@ db.exec(`
 
   CREATE INDEX IF NOT EXISTS transactions_user_occurred
     ON transactions (user_id, occurred_on);
+
+  CREATE TABLE IF NOT EXISTS monthly_events (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    event_date TEXT NOT NULL,
+    done INTEGER NOT NULL DEFAULT 0 CHECK (done IN (0, 1)),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  CREATE INDEX IF NOT EXISTS monthly_events_user_date
+    ON monthly_events (user_id, event_date);
+
+  CREATE TABLE IF NOT EXISTS monthly_goals (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    month TEXT NOT NULL,
+    title TEXT NOT NULL,
+    done INTEGER NOT NULL DEFAULT 0 CHECK (done IN (0, 1)),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  CREATE INDEX IF NOT EXISTS monthly_goals_user_month
+    ON monthly_goals (user_id, month);
 `)
 
 const now = new Date().toISOString()

@@ -5,8 +5,10 @@ import styles from './App.module.css'
 import Sidebar from './components/Sidebar/Sidebar.jsx'
 import WeekPage from './pages/Week/WeekPage.jsx'
 import FinancePage from './pages/Finance/FinancePage.jsx'
+import MonthlyPage from './pages/Monthly/MonthlyPage.jsx'
 import { useBoard } from './hooks/useBoard.js'
 import { useFinance } from './hooks/useFinance.js'
+import { useMonthly } from './hooks/useMonthly.js'
 import { getMonthKey, getWeekStart, todayKey } from './utils/calendar.js'
 
 /**
@@ -16,6 +18,8 @@ import { getMonthKey, getWeekStart, todayKey } from './utils/calendar.js'
  */
 function App() {
   const [selectedDate, setSelectedDate] = useState(todayKey)
+  const [monthlyMonth, setMonthlyMonth] = useState(getMonthKey(todayKey()))
+  const [monthlySelectedDate, setMonthlySelectedDate] = useState(todayKey)
   const location = useLocation()
   const mode = location.pathname === '/financas' ? 'month' : 'week'
   const weekStart = getWeekStart(selectedDate)
@@ -27,6 +31,7 @@ function App() {
     removeTransaction,
     error: financeError,
   } = useFinance(month, selectedDate)
+  const monthly = useMonthly(monthlyMonth)
   const [menuOpen, setMenuOpen] = useState(false)
 
   const closeMenu = useCallback(() => setMenuOpen(false), [])
@@ -54,11 +59,12 @@ function App() {
         selectedDate={selectedDate}
         onSelectDate={setSelectedDate}
         onNavigate={setSelectedDate}
+        hideCalendar={location.pathname === '/mensal'}
       />
 
       <main className={styles.main}>
         <div className={styles.content}>
-          {(boardError || financeError) && (
+          {(boardError || financeError || monthly.error) && (
             <p className={styles.error} role="alert">
               Não foi possível sincronizar os dados. Tente novamente.
             </p>
@@ -85,6 +91,32 @@ function App() {
                   onAdd={addTransaction}
                   onRemove={removeTransaction}
                   selectedDate={selectedDate}
+                />
+              }
+            />
+            <Route
+              path="/mensal"
+              element={
+                <MonthlyPage
+                  month={monthlyMonth}
+                  selectedDate={monthlySelectedDate.slice(0, 7) === monthlyMonth
+                    ? monthlySelectedDate
+                    : `${monthlyMonth}-01`}
+                  onSelectDate={setMonthlySelectedDate}
+                  onChangeMonth={(nextDate) => {
+                    const nextMonth = getMonthKey(nextDate)
+                    setMonthlyMonth(nextMonth)
+                    setMonthlySelectedDate(nextDate)
+                  }}
+                  events={monthly.events}
+                  goals={monthly.goals}
+                  onAddEvent={monthly.addEvent}
+                  onUpdateEvent={monthly.updateEvent}
+                  onToggleEvent={monthly.toggleEvent}
+                  onRemoveEvent={monthly.removeEvent}
+                  onAddGoal={monthly.addGoal}
+                  onToggleGoal={monthly.toggleGoal}
+                  onRemoveGoal={monthly.removeGoal}
                 />
               }
             />

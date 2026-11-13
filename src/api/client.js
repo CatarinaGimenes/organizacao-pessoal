@@ -45,4 +45,12 @@ export const api = {
     request(`/transactions/${id}?month=${encodeURIComponent(month)}`, {
       method: 'DELETE',
     }),
+  getMonthly: (month) => request(`/monthly?month=${encodeURIComponent(month)}`),
+  createMonthlyEvent: (input) => request('/monthly/events', { method: 'POST', body: JSON.stringify(input) }),
+  updateMonthlyEvent: (id, input) => request(`/monthly/events/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
+  toggleMonthlyEvent: (id) => request(`/monthly/events/${id}/toggle`, { method: 'PATCH' }),
+  removeMonthlyEvent: (id, month) => request(`/monthly/events/${id}?month=${encodeURIComponent(month)}`, { method: 'DELETE' }),
+  createMonthlyGoal: (input) => request('/monthly/goals', { method: 'POST', body: JSON.stringify(input) }),
+  toggleMonthlyGoal: (id) => request(`/monthly/goals/${id}/toggle`, { method: 'PATCH' }),
+  removeMonthlyGoal: (id, month) => request(`/monthly/goals/${id}?month=${encodeURIComponent(month)}`, { method: 'DELETE' }),
 }

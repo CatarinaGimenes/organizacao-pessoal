@@ -17,6 +17,14 @@ import {
   selectTransactions,
 } from '../src/state/finance.js'
 import { parseAmountToCents } from '../src/utils/currency.js'
+import {
+  addMonthlyEvent,
+  addMonthlyGoal,
+  createInitialMonthlyData,
+  removeMonthlyEvent,
+  toggleMonthlyEvent,
+  toggleMonthlyGoal,
+} from '../src/state/monthly.js'
 
 const results = []
 const check = (name, ok) => results.push([name, ok])
@@ -167,6 +175,21 @@ check(
     parseAmountToCents('abc') === 0,
 )
 
+/* ----------------------------------------------- regras mensais */
+const monthly = createInitialMonthlyData()
+const monthlyWithEvent = addMonthlyEvent(monthly, {
+  title: '  Reunião  ',
+  description: 'Pauta',
+  date: '2026-11-13',
+})
+check('planejamento mensal inicia vazio', monthly.events.length === 0 && monthly.goals.length === 0)
+check('evento mensal apara título', monthlyWithEvent.events[0].title === 'Reunião')
+check('evento mensal é imutável', monthly.events.length === 0)
+check('toggle de evento mensal', toggleMonthlyEvent(monthlyWithEvent, monthlyWithEvent.events[0].id).events[0].done)
+check('remove evento mensal', removeMonthlyEvent(monthlyWithEvent, monthlyWithEvent.events[0].id).events.length === 0)
+const monthlyWithGoal = addMonthlyGoal(monthly, { title: 'Ler um livro' })
+check('meta mensal e toggle', toggleMonthlyGoal(monthlyWithGoal, monthlyWithGoal.goals[0].id).goals[0].done)
+
 /* ------------------------------------------------------------- render */
 
 const server = await createServer({
@@ -195,6 +218,11 @@ try {
   check('7 formulários de adicionar', (html.match(/type="text"/g) ?? []).length === 7)
   check('estado vazio visível', html.includes('Arraste ou adicione uma tarefa'))
   check('resumo de tarefas', html.includes('tarefas concluídas'))
+
+  const monthlyHtml = renderToString(
+    React.createElement(MemoryRouter, { initialEntries: ['/mensal'] }, React.createElement(App)),
+  )
+  check('rota mensal renderiza calendário e metas', monthlyHtml.includes('Planejamento Mensal') && monthlyHtml.includes('Metas do mês'))
 
   // Regra de cor do saldo — componente isolado, fora do roteamento.
   const { default: FinanceSummary } = await server.ssrLoadModule(

@@ -11,6 +11,14 @@ import {
   getWeekStart,
   moveTask,
   listTransactions,
+  listMonthlyData,
+  createMonthlyEvent,
+  updateMonthlyEvent,
+  toggleMonthlyEvent,
+  deleteMonthlyEvent,
+  createMonthlyGoal,
+  toggleMonthlyGoal,
+  deleteMonthlyGoal,
   updateTask,
 } from './domain.js'
 
@@ -72,6 +80,11 @@ async function handler(request, response) {
     })
   }
 
+  if (request.method === 'GET' && parts[1] === 'monthly') {
+    const month = url.searchParams.get('month') ?? new Date().toISOString().slice(0, 7)
+    return sendJson(response, 200, listMonthlyData(userId, month))
+  }
+
   if (request.method === 'POST' && parts.length === 2 && parts[1] === 'tasks') {
     const body = await readJson(request)
     return sendJson(response, 201, {
@@ -113,12 +126,40 @@ async function handler(request, response) {
     })
   }
 
+  if (request.method === 'POST' && parts[1] === 'monthly' && parts[2] === 'events') {
+    return sendJson(response, 201, { monthly: createMonthlyEvent(userId, await readJson(request)) })
+  }
+  if (parts[1] === 'monthly' && parts[2] === 'events' && parts[3]) {
+    const id = parts[3]
+    if (request.method === 'PATCH' && parts[4] === 'toggle') {
+      return sendJson(response, 200, { monthly: toggleMonthlyEvent(userId, id) })
+    }
+    if (request.method === 'PATCH') {
+      return sendJson(response, 200, { monthly: updateMonthlyEvent(userId, id, await readJson(request)) })
+    }
+    if (request.method === 'DELETE') {
+      return sendJson(response, 200, { monthly: deleteMonthlyEvent(userId, id, url.searchParams.get('month')) })
+    }
+  }
+  if (request.method === 'POST' && parts[1] === 'monthly' && parts[2] === 'goals') {
+    return sendJson(response, 201, { monthly: createMonthlyGoal(userId, await readJson(request)) })
+  }
+  if (parts[1] === 'monthly' && parts[2] === 'goals' && parts[3]) {
+    const id = parts[3]
+    if (request.method === 'PATCH' && parts[4] === 'toggle') {
+      return sendJson(response, 200, { monthly: toggleMonthlyGoal(userId, id) })
+    }
+    if (request.method === 'DELETE') {
+      return sendJson(response, 200, { monthly: deleteMonthlyGoal(userId, id, url.searchParams.get('month')) })
+    }
+  }
+
   return sendJson(response, 404, { error: 'Rota não encontrada' })
 }
 
 const server = createServer((request, response) => {
   handler(request, response).catch((error) => {
-    const status = /não encontrada|inválid|obrigatóri|deve|Categoria|Tipo|Tarefa|Transação/.test(error.message)
+    const status = /não encontrada|inválid|obrigatóri|deve|Categoria|Tipo|Tarefa|Transação|Evento|Meta/.test(error.message)
       ? 400
       : 500
     sendJson(response, status, { error: error.message })

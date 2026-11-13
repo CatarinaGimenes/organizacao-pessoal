@@ -10,7 +10,7 @@ import styles from './Sidebar.module.css'
  * `open`/`onClose` (o botão hambúrguer fica na topbar do App).
  * Os itens usam NavLink: o react-router marca `aria-current="page"` sozinho.
  */
-function Sidebar({ open, onClose, mode, selectedDate, onSelectDate, onNavigate }) {
+function Sidebar({ open, onClose, mode, selectedDate, onSelectDate, onNavigate, hideCalendar = false }) {
   // Fecha o drawer com a tecla ESC — só roda no cliente, seguro para SSR
   useEffect(() => {
     if (!open) return undefined
@@ -54,12 +54,14 @@ function Sidebar({ open, onClose, mode, selectedDate, onSelectDate, onNavigate }
           </button>
         </div>
 
-        <Calendar
-          mode={mode}
-          selectedDate={selectedDate}
-          onSelectDate={onSelectDate}
-          onNavigate={onNavigate}
-        />
+        {!hideCalendar && (
+          <Calendar
+            mode={mode}
+            selectedDate={selectedDate}
+            onSelectDate={onSelectDate}
+            onNavigate={onNavigate}
+          />
+        )}
 
         {/* Navegação ------------------------------------------------------------ */}
         <nav className={styles.nav} aria-label="Navegação principal">
@@ -68,6 +70,9 @@ function Sidebar({ open, onClose, mode, selectedDate, onSelectDate, onNavigate }
           </NavLink>
           <NavLink to="/financas" onClick={onClose}>
             Planejamento Financeiro
+          </NavLink>
+          <NavLink to="/mensal" onClick={onClose}>
+            Planejamento Mensal
           </NavLink>
         </nav>
       </aside>
