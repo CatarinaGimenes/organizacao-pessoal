@@ -14,8 +14,13 @@ import { useFinance } from './hooks/useFinance.js'
  * memória — se vivessem nas páginas, navegar entre telas perdia os dados.
  */
 function App() {
-  const { board, addTask, toggleTask, removeTask, moveTask } = useBoard()
-  const { transactions, addTransaction, removeTransaction } = useFinance()
+  const { board, addTask, toggleTask, removeTask, moveTask, error: boardError } = useBoard()
+  const {
+    transactions,
+    addTransaction,
+    removeTransaction,
+    error: financeError,
+  } = useFinance()
   const [menuOpen, setMenuOpen] = useState(false)
 
   const closeMenu = useCallback(() => setMenuOpen(false), [])
@@ -40,6 +45,11 @@ function App() {
 
       <main className={styles.main}>
         <div className={styles.content}>
+          {(boardError || financeError) && (
+            <p className={styles.error} role="alert">
+              Não foi possível sincronizar os dados. Tente novamente.
+            </p>
+          )}
           <Routes>
             <Route
               path="/"

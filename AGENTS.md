@@ -10,6 +10,8 @@ npm run lint     # oxlint (único linter; sem Prettier/formatter)
 npm run check    # suite de verificação — NÃO há vitest/jest; isto é o "teste"
 npm run build    # build de produção (vite build)
 npm run dev      # dev server
+npm run full     # frontend e backend juntos
+npm run server   # API Node + SQLite em localhost:3001
 ```
 
 Ordem de verificação antes de concluir: `npm run lint` → `npm run check` →
@@ -51,8 +53,8 @@ Não existe CI nem outro test runner — `check` é a única verificação funci
   `selectTransactions`, `calculateSummary`). Nunca coloque lógica de negócio
   em componentes ou nos hooks.
 - **`src/hooks/useBoard.js` e `src/hooks/useFinance.js` são só glue React**:
-  estado em memória (`useState`), sem persistência. Adicionar localStorage/API
-  é alterar apenas o hook — componentes não mudam.
+  carregam e sincronizam o estado com `src/api/client.js`; os componentes não
+  conhecem endpoints. A persistência fica no backend SQLite.
 - **Os hooks vivem no `App`, não nas páginas**: o estado é só em memória, então
   instanciá-los dentro das páginas faria a navegação perder os dados.
 - **Roteamento via `react-router-dom`**: `BrowserRouter` em `src/main.jsx`,
@@ -76,3 +78,9 @@ Não existe CI nem outro test runner — `check` é a única verificação funci
   `src/index.css`. Cada componente tem seu próprio `.module.css`.
 - **`src/App.css` é resto morto**: não é importado em lugar nenhum. Os
   estilos reais do App estão em `App.module.css`.
+- **Backend**: `server/index.js` expõe a API HTTP e `server/domain.js`
+  concentra validação e operações de domínio. `server/db.js` inicializa o
+  SQLite e o schema com `users`, `weekly_plans`, `tasks` e `transactions`.
+  Todas as entidades persistidas têm `created_at`/`updated_at`, expostos pela
+  API como `createdAt`/`updatedAt`; `getCurrentUserId()` é o ponto de extensão
+  para autenticação futura.
