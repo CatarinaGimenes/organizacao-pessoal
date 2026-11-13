@@ -12,11 +12,15 @@ import {
 import {
   addTransaction,
   calculateSummary,
+  calculateDashboardKpis,
+  calculateExpenseDistribution,
+  calculateMonthlyTotals,
   createInitialTransactions,
   removeTransaction,
   selectTransactions,
 } from '../src/state/finance.js'
 import { parseAmountToCents } from '../src/utils/currency.js'
+import { getFinanceDashboardRange } from '../src/utils/calendar.js'
 import {
   addMonthlyEvent,
   addMonthlyGoal,
@@ -174,6 +178,36 @@ check(
     parseAmountToCents('12.34') === 1234 &&
     parseAmountToCents('abc') === 0,
 )
+const dashboardTransactions = [
+  { type: 'gasto', category: 'contas', amount: 10000, occurredOn: '2026-01-03' },
+  { type: 'gasto', category: 'transporte', amount: 2500, occurredOn: '2026-01-04' },
+  { type: 'gasto', category: 'lazer', amount: 5000, occurredOn: '2026-02-04' },
+  { type: 'gasto', category: 'investimentos', amount: 20000, occurredOn: '2026-02-10' },
+  { type: 'ganho', category: 'salario', amount: 100000, occurredOn: '2026-01-01' },
+  { type: 'ganho', category: 'renda-extra', amount: 15000, occurredOn: '2026-02-01' },
+]
+const dashboardKpis = calculateDashboardKpis(dashboardTransactions, 'lazer')
+check('categoria transporte é válida', addTransaction(noTransactions, {
+  type: 'gasto', description: 'Ônibus', amount: 1200, category: 'transporte',
+}).length === 1)
+check('dashboard soma gasto por categoria', dashboardKpis.totalByCategory === 5000)
+check('dashboard soma outras fontes de renda', dashboardKpis.otherIncome === 15000)
+check('dashboard soma investimentos', dashboardKpis.invested === 20000)
+check('dashboard soma gastos não essenciais', dashboardKpis.nonEssential === 5000)
+check('dashboard agrupa despesas por categoria', calculateExpenseDistribution(dashboardTransactions).length === 4)
+check(
+  'dashboard preenche meses anuais sem movimentação',
+  calculateMonthlyTotals(dashboardTransactions, '2026').length === 12 &&
+    calculateMonthlyTotals(dashboardTransactions, '2026')[11].gastos === 0,
+)
+check(
+  'dashboard anual usa ano atual até hoje',
+  getFinanceDashboardRange('2026-11-13', 'annual', '2026-11-13').end === '2026-11-13',
+)
+check(
+  'dashboard anual usa ano encerrado completo',
+  getFinanceDashboardRange('2024-06-01', 'annual', '2026-11-13').end === '2024-12-31',
+)
 
 /* ----------------------------------------------- regras mensais */
 const monthly = createInitialMonthlyData()
@@ -223,6 +257,26 @@ try {
     React.createElement(MemoryRouter, { initialEntries: ['/mensal'] }, React.createElement(App)),
   )
   check('rota mensal renderiza calendário e metas', monthlyHtml.includes('Planejamento Mensal') && monthlyHtml.includes('Metas do mês'))
+
+  const goalsHtml = renderToString(
+    React.createElement(MemoryRouter, { initialEntries: ['/metas'] }, React.createElement(App)),
+  )
+
+  const dashboardHtml = renderToString(
+    React.createElement(
+      MemoryRouter,
+      { initialEntries: ['/visualizacao-financeira'] },
+      React.createElement(App),
+    ),
+  )
+  check(
+    'rota de visualização financeira renderiza',
+    dashboardHtml.includes('Visualização Financeira') || dashboardHtml.includes('Carregando movimentações'),
+  )
+  check(
+    'rota de metas renderiza carregamento',
+    goalsHtml.includes('Carregando seus quadros') || goalsHtml.includes('Planejamento de Metas'),
+  )
 
   // Regra de cor do saldo — componente isolado, fora do roteamento.
   const { default: FinanceSummary } = await server.ssrLoadModule(

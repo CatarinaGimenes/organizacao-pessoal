@@ -1,4 +1,8 @@
-import { ALL_CATEGORIES, getCategories } from '../data/finance.js'
+import {
+  ALL_CATEGORIES,
+  EXPENSE_CATEGORIES,
+  getCategories,
+} from '../data/finance.js'
 import { createId } from '../utils/id.js'
 
 /**
@@ -77,4 +81,53 @@ export function calculateSummary(transactions) {
   }
 
   return { gastos, ganhos, saldo: ganhos - gastos }
+}
+
+export function calculateExpenseDistribution(transactions) {
+  return EXPENSE_CATEGORIES
+    .map((category) => ({
+      category: category.id,
+      label: category.label,
+      amount: transactions
+        .filter((transaction) => transaction.type === 'gasto' && transaction.category === category.id)
+        .reduce((total, transaction) => total + transaction.amount, 0),
+    }))
+    .filter((item) => item.amount > 0)
+}
+
+export function calculateDashboardKpis(transactions, selectedCategory = EXPENSE_CATEGORIES[0].id) {
+  const totalByCategory = transactions
+    .filter((transaction) => transaction.type === 'gasto' && transaction.category === selectedCategory)
+    .reduce((total, transaction) => total + transaction.amount, 0)
+  const otherIncome = transactions
+    .filter((transaction) => transaction.type === 'ganho' && transaction.category !== 'salario')
+    .reduce((total, transaction) => total + transaction.amount, 0)
+  const invested = transactions
+    .filter((transaction) => transaction.type === 'gasto' && transaction.category === 'investimentos')
+    .reduce((total, transaction) => total + transaction.amount, 0)
+  const nonEssential = transactions
+    .filter((transaction) =>
+      transaction.type === 'gasto' &&
+      !['contas', 'saude', 'transporte', 'investimentos'].includes(transaction.category))
+    .reduce((total, transaction) => total + transaction.amount, 0)
+
+  return { totalByCategory, otherIncome, invested, nonEssential }
+}
+
+export function calculateMonthlyTotals(transactions, year) {
+  const monthLabels = [
+    'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+    'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez',
+  ]
+  return monthLabels.map((label, index) => {
+    const month = String(index + 1).padStart(2, '0')
+    const prefix = `${year}-${month}`
+    const monthly = transactions.filter((transaction) => transaction.occurredOn?.startsWith(prefix))
+    return {
+      month: prefix,
+      label,
+      ganhos: calculateSummary(monthly).ganhos,
+      gastos: calculateSummary(monthly).gastos,
+    }
+  })
 }

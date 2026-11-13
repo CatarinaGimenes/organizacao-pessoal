@@ -10,6 +10,7 @@ export const EXPENSE_CATEGORIES = [
   { id: 'alimentacao', label: 'Alimentação' },
   { id: 'lazer', label: 'Lazer' },
   { id: 'saude', label: 'Saúde' },
+  { id: 'transporte', label: 'Transporte' },
   { id: 'investimentos', label: 'Investimentos' },
   { id: 'outros-gastos', label: 'Outros' },
 ]

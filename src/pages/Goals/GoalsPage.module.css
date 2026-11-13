@@ -1,0 +1,70 @@
+.header,.boardBar,.sectionHeader,.goalHeader,.actionsHeader { display:flex; align-items:center; justify-content:space-between; gap:var(--space-3); }
+.header { align-items:flex-end; margin-bottom:var(--space-5); }
+.eyebrow,.cardEyebrow { color:var(--color-rose-700); font-size:.75rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; }
+.header h1 { font-size:clamp(1.5rem,3vw,2rem); line-height:1.2; }
+.subtitle { margin-top:var(--space-2); color:var(--color-neutral-600); }
+.primaryButton,.secondaryButton,.smallButton { display:inline-flex; align-items:center; justify-content:center; gap:var(--space-2); padding:var(--space-2) var(--space-3); border:0; border-radius:var(--radius-sm); font-weight:600; }
+.primaryButton { color:var(--color-neutral-900); background:var(--color-green-200); }
+.primaryButton:hover { background:var(--color-green-300); }
+.secondaryButton { color:var(--color-neutral-700); background:var(--color-neutral-100); }
+.smallButton { color:var(--color-rose-700); background:var(--color-rose-100); font-size:.85rem; }
+.boardBar { min-height:100px; padding:var(--space-4); border:1px solid var(--color-rose-200); border-radius:var(--radius-lg); background:linear-gradient(110deg,var(--color-rose-50),var(--color-neutral-0)); box-shadow:var(--shadow-soft); }
+.boardInfo { flex:1; text-align:center; }
+.boardInfo h2 { font-size:1.35rem; }
+.boardInfo>span:last-child { color:var(--color-neutral-600); font-size:.85rem; }
+.boardCounter { display:block; margin-bottom:var(--space-1); color:var(--color-rose-700); font-size:.75rem; font-weight:600; text-transform:uppercase; }
+.arrowButton,.iconButton { display:grid; place-items:center; flex:0 0 auto; padding:var(--space-2); color:var(--color-neutral-600); background:transparent; border:1px solid transparent; border-radius:var(--radius-sm); }
+.arrowButton { width:42px; height:42px; border-color:var(--color-rose-200); background:var(--color-neutral-0); }
+.arrowButton:hover:not(:disabled),.iconButton:hover:not(:disabled) { color:var(--color-rose-700); background:var(--color-rose-100); }
+.arrowButton:disabled,.iconButton:disabled { cursor:not-allowed; opacity:.4; }
+.boardControls,.cardActions { display:flex; gap:var(--space-1); }
+.newGoal,.goalCard { margin-top:var(--space-5); padding:var(--space-5); border:1px solid var(--color-neutral-100); border-radius:var(--radius-lg); background:var(--color-neutral-0); box-shadow:var(--shadow-soft); }
+.newGoal { display:grid; gap:var(--space-3); }
+.newGoal h2 { font-size:1.2rem; }
+.field { display:grid; gap:var(--space-1); min-width:0; }
+.field>span { color:var(--color-neutral-600); font-size:.85rem; font-weight:600; }
+.field input,.field select,.field textarea,.actionForm input,.actionForm select { width:100%; padding:var(--space-2) var(--space-3); border:1px solid var(--color-neutral-200); border-radius:var(--radius-sm); background:var(--color-neutral-0); }
+.field textarea { resize:vertical; }
+.goalsSection { margin-top:var(--space-6); }
+.sectionHeader { align-items:flex-end; margin-bottom:var(--space-4); }
+.sectionHeader h2 { font-size:1.25rem; }
+.sectionHeader>span { padding:var(--space-2) var(--space-3); color:var(--color-neutral-600); border:1px solid var(--color-neutral-200); border-radius:var(--radius-full); background:var(--color-neutral-0); }
+.goalList { display:grid; gap:var(--space-4); }
+.goalHeader { align-items:flex-start; }
+.goalHeader h2 { margin-top:var(--space-1); font-size:1.15rem; }
+.requirements { margin-top:var(--space-4); padding:var(--space-3); border-left:3px solid var(--color-green-300); background:var(--color-green-50); }
+.requirements strong { font-size:.85rem; }
+.requirements p { margin-top:var(--space-1); color:var(--color-neutral-600); white-space:pre-wrap; }
+.actionsHeader { align-items:center; margin-top:var(--space-5); padding-top:var(--space-4); border-top:1px solid var(--color-neutral-100); }
+.actionsHeader h3 { font-size:1rem; }
+.actionsHeader span { color:var(--color-neutral-500); font-size:.8rem; }
+.actionList { display:grid; gap:var(--space-2); margin-top:var(--space-3); }
+.actionItem { display:grid; grid-template-columns:minmax(0,1fr) auto auto auto; align-items:center; gap:var(--space-2); padding:var(--space-2) var(--space-3); border:1px solid var(--color-neutral-100); border-radius:var(--radius-sm); }
+.checkLabel { display:flex; align-items:center; gap:var(--space-2); min-width:0; }
+.checkLabel span { overflow:hidden; text-overflow:ellipsis; }
+.actionItem[data-done='true'] .checkLabel span { color:var(--color-neutral-400); text-decoration:line-through; }
+.frequency { color:var(--color-rose-700); font-size:.78rem; white-space:nowrap; }
+.actionForm,.goalEditForm { display:grid; gap:var(--space-2); }
+.actionForm { grid-template-columns:minmax(0,1fr) minmax(140px,.4fr); align-items:center; width:100%; }
+.actionForm .formActions { grid-column:1 / -1; }
+.inlineFields { display:grid; grid-template-columns:1fr 1fr; gap:var(--space-3); }
+.formActions { display:flex; gap:var(--space-2); }
+.empty,.status { color:var(--color-neutral-500); }
+.empty { margin-top:var(--space-3); }
+.status { padding:var(--space-6); text-align:center; }
+.modalBackdrop { position:fixed; z-index:50; inset:0; display:grid; place-items:center; padding:var(--space-4); background:rgb(61 56 57 / 40%); }
+.modal { width:min(100%,520px); padding:var(--space-5); border-radius:var(--radius-lg); background:var(--color-neutral-0); box-shadow:var(--shadow-card); }
+.modalHeader { display:flex; align-items:flex-start; justify-content:space-between; gap:var(--space-3); margin-bottom:var(--space-5); }
+.modalHeader h2 { margin-top:var(--space-1); font-size:1.25rem; }
+.form { display:grid; gap:var(--space-4); }
+@media (max-width:767px) {
+  .header,.boardBar { align-items:stretch; flex-direction:column; }
+  .header .primaryButton { width:100%; }
+  .boardBar { display:grid; grid-template-columns:42px minmax(0,1fr) 42px; }
+  .boardControls { grid-column:1 / -1; grid-row:2; justify-content:center; }
+  .boardInfo { grid-column:2; }
+  .actionItem { grid-template-columns:minmax(0,1fr) auto auto; }
+  .frequency { grid-column:1 / -1; grid-row:2; }
+  .actionForm { grid-template-columns:1fr; }
+  .inlineFields { grid-template-columns:1fr; }
+}

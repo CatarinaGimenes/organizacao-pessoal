@@ -54,6 +54,20 @@ export function getMonthBounds(monthKey) {
   return { start: formatDateKey(first), end: formatDateKey(last) }
 }
 
+export function getFinanceDashboardRange(selectedDate, period, currentDate = todayKey()) {
+  const monthKey = getMonthKey(selectedDate)
+  const bounds = getMonthBounds(monthKey)
+  if (!bounds || (period !== 'monthly' && period !== 'annual')) return null
+  if (period === 'monthly') return { start: bounds.start, end: bounds.end }
+
+  const year = selectedDate.slice(0, 4)
+  const currentYear = currentDate.slice(0, 4)
+  return {
+    start: `${year}-01-01`,
+    end: year === currentYear ? currentDate : `${year}-12-31`,
+  }
+}
+
 export function getCalendarDays(monthKey) {
   const bounds = getMonthBounds(monthKey)
   if (!bounds) return []

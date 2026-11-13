@@ -11,6 +11,7 @@ import {
   getWeekStart,
   moveTask,
   listTransactions,
+  listTransactionsRange,
   listMonthlyData,
   createMonthlyEvent,
   updateMonthlyEvent,
@@ -20,6 +21,17 @@ import {
   toggleMonthlyGoal,
   deleteMonthlyGoal,
   updateTask,
+  listGoalBoards,
+  createGoalBoard,
+  updateGoalBoard,
+  deleteGoalBoard,
+  createGoal,
+  updateGoal,
+  deleteGoal,
+  createGoalAction,
+  updateGoalAction,
+  toggleGoalAction,
+  deleteGoalAction,
 } from './domain.js'
 
 const port = Number(process.env.PORT ?? 3001)
@@ -80,9 +92,23 @@ async function handler(request, response) {
     })
   }
 
+  if (request.method === 'GET' && parts[1] === 'financial-dashboard') {
+    const from = url.searchParams.get('from')
+    const to = url.searchParams.get('to')
+    return sendJson(response, 200, {
+      from,
+      to,
+      transactions: listTransactionsRange(userId, from, to),
+    })
+  }
+
   if (request.method === 'GET' && parts[1] === 'monthly') {
     const month = url.searchParams.get('month') ?? new Date().toISOString().slice(0, 7)
     return sendJson(response, 200, listMonthlyData(userId, month))
+  }
+
+  if (request.method === 'GET' && parts[1] === 'goals') {
+    return sendJson(response, 200, { boards: listGoalBoards(userId) })
   }
 
   if (request.method === 'POST' && parts.length === 2 && parts[1] === 'tasks') {
@@ -154,12 +180,72 @@ async function handler(request, response) {
     }
   }
 
+  if (request.method === 'POST' && parts.length === 3 && parts[1] === 'goals' && parts[2] === 'boards') {
+    return sendJson(response, 201, {
+      boards: createGoalBoard(userId, await readJson(request)),
+    })
+  }
+  if (parts[1] === 'goals' && parts[2] === 'boards' && parts[3]) {
+    const boardId = parts[3]
+    if (request.method === 'PATCH') {
+      return sendJson(response, 200, {
+        boards: updateGoalBoard(userId, boardId, await readJson(request)),
+      })
+    }
+    if (request.method === 'DELETE') {
+      return sendJson(response, 200, {
+        boards: deleteGoalBoard(userId, boardId),
+      })
+    }
+  }
+  if (request.method === 'POST' && parts[1] === 'goals' && parts[2] === 'boards' && parts[3] && parts[4] === 'goals') {
+    return sendJson(response, 201, {
+      boards: createGoal(userId, parts[3], await readJson(request)),
+    })
+  }
+  if (parts[1] === 'goals' && parts[2] === 'items' && parts[3]) {
+    const goalId = parts[3]
+    if (request.method === 'PATCH') {
+      return sendJson(response, 200, {
+        boards: updateGoal(userId, goalId, await readJson(request)),
+      })
+    }
+    if (request.method === 'DELETE') {
+      return sendJson(response, 200, {
+        boards: deleteGoal(userId, goalId),
+      })
+    }
+  }
+  if (request.method === 'POST' && parts[1] === 'goals' && parts[2] === 'items' && parts[3] && parts[4] === 'actions') {
+    return sendJson(response, 201, {
+      boards: createGoalAction(userId, parts[3], await readJson(request)),
+    })
+  }
+  if (parts[1] === 'goals' && parts[2] === 'actions' && parts[3]) {
+    const actionId = parts[3]
+    if (request.method === 'PATCH' && parts[4] === 'toggle') {
+      return sendJson(response, 200, {
+        boards: toggleGoalAction(userId, actionId),
+      })
+    }
+    if (request.method === 'PATCH') {
+      return sendJson(response, 200, {
+        boards: updateGoalAction(userId, actionId, await readJson(request)),
+      })
+    }
+    if (request.method === 'DELETE') {
+      return sendJson(response, 200, {
+        boards: deleteGoalAction(userId, actionId),
+      })
+    }
+  }
+
   return sendJson(response, 404, { error: 'Rota não encontrada' })
 }
 
 const server = createServer((request, response) => {
   handler(request, response).catch((error) => {
-    const status = /não encontrada|inválid|obrigatóri|deve|Categoria|Tipo|Tarefa|Transação|Evento|Meta/.test(error.message)
+    const status = /não encontrada|inválid|obrigatóri|deve|Categoria|Tipo|Tarefa|Transação|Evento|Meta|Quadro|Periodicidade|duração|Descrição|Requisitos|ação/.test(error.message)
       ? 400
       : 500
     sendJson(response, status, { error: error.message })

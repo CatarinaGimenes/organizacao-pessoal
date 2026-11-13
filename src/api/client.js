@@ -45,6 +45,8 @@ export const api = {
     request(`/transactions/${id}?month=${encodeURIComponent(month)}`, {
       method: 'DELETE',
     }),
+  getFinancialDashboard: (from, to) =>
+    request(`/financial-dashboard?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`),
   getMonthly: (month) => request(`/monthly?month=${encodeURIComponent(month)}`),
   createMonthlyEvent: (input) => request('/monthly/events', { method: 'POST', body: JSON.stringify(input) }),
   updateMonthlyEvent: (id, input) => request(`/monthly/events/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
@@ -53,4 +55,19 @@ export const api = {
   createMonthlyGoal: (input) => request('/monthly/goals', { method: 'POST', body: JSON.stringify(input) }),
   toggleMonthlyGoal: (id) => request(`/monthly/goals/${id}/toggle`, { method: 'PATCH' }),
   removeMonthlyGoal: (id, month) => request(`/monthly/goals/${id}?month=${encodeURIComponent(month)}`, { method: 'DELETE' }),
+  getGoalBoards: () => request('/goals'),
+  createGoalBoard: (input) => request('/goals/boards', { method: 'POST', body: JSON.stringify(input) }),
+  updateGoalBoard: (id, input) => request(`/goals/boards/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
+  deleteGoalBoard: (id) => request(`/goals/boards/${id}`, { method: 'DELETE' }),
+  createGoal: (boardId, input) =>
+    request(`/goals/boards/${boardId}/goals`, { method: 'POST', body: JSON.stringify(input) }),
+  updateGoal: (id, input) =>
+    request(`/goals/items/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
+  deleteGoal: (id) => request(`/goals/items/${id}`, { method: 'DELETE' }),
+  createGoalAction: (goalId, input) =>
+    request(`/goals/items/${goalId}/actions`, { method: 'POST', body: JSON.stringify(input) }),
+  updateGoalAction: (id, input) =>
+    request(`/goals/actions/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
+  toggleGoalAction: (id) => request(`/goals/actions/${id}/toggle`, { method: 'PATCH' }),
+  deleteGoalAction: (id) => request(`/goals/actions/${id}`, { method: 'DELETE' }),
 }

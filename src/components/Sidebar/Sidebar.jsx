@@ -71,8 +71,14 @@ function Sidebar({ open, onClose, mode, selectedDate, onSelectDate, onNavigate, 
           <NavLink to="/financas" onClick={onClose}>
             Planejamento Financeiro
           </NavLink>
+          <NavLink to="/visualizacao-financeira" onClick={onClose}>
+            Visualização Financeira
+          </NavLink>
           <NavLink to="/mensal" onClick={onClose}>
             Planejamento Mensal
+          </NavLink>
+          <NavLink to="/metas" onClick={onClose}>
+            Planejamento de Metas
           </NavLink>
         </nav>
       </aside>

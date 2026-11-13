@@ -89,6 +89,44 @@ db.exec(`
 
   CREATE INDEX IF NOT EXISTS monthly_goals_user_month
     ON monthly_goals (user_id, month);
+
+  CREATE TABLE IF NOT EXISTS goal_boards (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    duration_value INTEGER NOT NULL CHECK (duration_value > 0),
+    duration_unit TEXT NOT NULL CHECK (duration_unit IN ('dias', 'meses', 'anos')),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  CREATE INDEX IF NOT EXISTS goal_boards_user_created
+    ON goal_boards (user_id, created_at, id);
+
+  CREATE TABLE IF NOT EXISTS goals (
+    id TEXT PRIMARY KEY,
+    board_id TEXT NOT NULL REFERENCES goal_boards(id) ON DELETE CASCADE,
+    description TEXT NOT NULL,
+    requirements TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  CREATE INDEX IF NOT EXISTS goals_board_created
+    ON goals (board_id, created_at, id);
+
+  CREATE TABLE IF NOT EXISTS goal_actions (
+    id TEXT PRIMARY KEY,
+    goal_id TEXT NOT NULL REFERENCES goals(id) ON DELETE CASCADE,
+    description TEXT NOT NULL,
+    frequency TEXT NOT NULL,
+    done INTEGER NOT NULL DEFAULT 0 CHECK (done IN (0, 1)),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  CREATE INDEX IF NOT EXISTS goal_actions_goal_created
+    ON goal_actions (goal_id, created_at, id);
 `)
 
 const now = new Date().toISOString()

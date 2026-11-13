@@ -281,12 +281,19 @@ export function getMonthBounds(month) {
 
 export function listTransactions(userId, month) {
   const { first, last } = getMonthBounds(month)
+  return listTransactionsRange(userId, first, last)
+}
+
+export function listTransactionsRange(userId, from, to) {
+  if (!isValidDate(from) || !isValidDate(to) || from > to) {
+    throw new Error('Intervalo financeiro inválido')
+  }
   return db.prepare(`
     SELECT id, type, description, amount_cents, category, occurred_on, created_at, updated_at
     FROM transactions
     WHERE user_id = ? AND occurred_on BETWEEN ? AND ?
     ORDER BY occurred_on, created_at, id
-  `).all(userId, first, last).map(mapTransaction)
+  `).all(userId, from, to).map(mapTransaction)
 }
 
 function isValidCategory(type, category) {
@@ -465,6 +472,275 @@ export function deleteMonthlyGoal(userId, id, month) {
   const result = db.prepare('DELETE FROM monthly_goals WHERE id = ? AND user_id = ?').run(id, userId)
   if (result.changes === 0) throw new Error('Meta mensal não encontrada')
   return listMonthlyData(userId, month)
+}
+
+const GOAL_DURATION_UNITS = ['dias', 'meses', 'anos']
+const GOAL_FREQUENCIES = ['diária', 'semanal', 'mensal']
+
+function validateGoalBoardInput(input) {
+  const name = typeof input?.name === 'string' ? input.name.trim() : ''
+  const durationValue = input?.durationValue
+  const durationUnit = input?.durationUnit
+  if (!name || name.length > 120) throw new Error('Nome do quadro deve ter entre 1 e 120 caracteres')
+  if (!Number.isInteger(durationValue) || durationValue <= 0) {
+    throw new Error('durationValue deve ser um inteiro positivo')
+  }
+  if (!GOAL_DURATION_UNITS.includes(durationUnit)) {
+    throw new Error('Unidade de duração inválida')
+  }
+  return { name, durationValue, durationUnit }
+}
+
+function validateGoalInput(input) {
+  const description = typeof input?.description === 'string' ? input.description.trim() : ''
+  const requirements = typeof input?.requirements === 'string' ? input.requirements.trim() : ''
+  if (!description || description.length > 500) {
+    throw new Error('Descrição da meta deve ter entre 1 e 500 caracteres')
+  }
+  if (requirements.length > 1000) throw new Error('Requisitos devem ter até 1000 caracteres')
+  return { description, requirements }
+}
+
+function validateGoalActionInput(input) {
+  const description = typeof input?.description === 'string' ? input.description.trim() : ''
+  const frequency = typeof input?.frequency === 'string' ? input.frequency.trim() : ''
+  if (!description || description.length > 300) {
+    throw new Error('Descrição da ação deve ter entre 1 e 300 caracteres')
+  }
+  if (!frequency || frequency.length > 100) {
+    throw new Error('Periodicidade deve ter entre 1 e 100 caracteres')
+  }
+  if (!GOAL_FREQUENCIES.includes(frequency) && !frequency.startsWith('personalizada:')) {
+    throw new Error('Periodicidade inválida')
+  }
+  return { description, frequency }
+}
+
+export function mapGoalAction(row) {
+  return {
+    id: row.id,
+    description: row.description,
+    frequency: row.frequency,
+    done: Boolean(row.done),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+export function mapGoal(row, actions = []) {
+  return {
+    id: row.id,
+    description: row.description,
+    requirements: row.requirements,
+    actions,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+export function mapGoalBoard(row, goals = []) {
+  return {
+    id: row.id,
+    name: row.name,
+    durationValue: row.duration_value,
+    durationUnit: row.duration_unit,
+    goals,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+function ensureGoalBoard(userId) {
+  const existing = db.prepare(`
+    SELECT id, name, duration_value, duration_unit, created_at, updated_at
+    FROM goal_boards
+    WHERE user_id = ?
+    ORDER BY created_at, id
+    LIMIT 1
+  `).get(userId)
+  if (existing) return existing
+
+  const id = randomUUID()
+  const timestamp = nowIso()
+  db.prepare(`
+    INSERT INTO goal_boards (
+      id, user_id, name, duration_value, duration_unit, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(id, userId, 'Meu primeiro quadro', 1, 'anos', timestamp, timestamp)
+  return db.prepare(`
+    SELECT id, name, duration_value, duration_unit, created_at, updated_at
+    FROM goal_boards WHERE id = ?
+  `).get(id)
+}
+
+export function listGoalBoards(userId) {
+  ensureGoalBoard(userId)
+  const boardRows = db.prepare(`
+    SELECT id, name, duration_value, duration_unit, created_at, updated_at
+    FROM goal_boards
+    WHERE user_id = ?
+    ORDER BY created_at, id
+  `).all(userId)
+  const goalRows = db.prepare(`
+    SELECT id, board_id, description, requirements, created_at, updated_at
+    FROM goals
+    WHERE board_id IN (SELECT id FROM goal_boards WHERE user_id = ?)
+    ORDER BY created_at, id
+  `).all(userId)
+  const actionRows = db.prepare(`
+    SELECT id, goal_id, description, frequency, done, created_at, updated_at
+    FROM goal_actions
+    WHERE goal_id IN (
+      SELECT goals.id
+      FROM goals
+      JOIN goal_boards ON goal_boards.id = goals.board_id
+      WHERE goal_boards.user_id = ?
+    )
+    ORDER BY created_at, id
+  `).all(userId)
+
+  return boardRows.map((board) => mapGoalBoard(
+    board,
+    goalRows
+      .filter((goal) => goal.board_id === board.id)
+      .map((goal) => mapGoal(
+        goal,
+        actionRows.filter((action) => action.goal_id === goal.id).map(mapGoalAction),
+      )),
+  ))
+}
+
+function getGoalBoardForUser(userId, boardId) {
+  return db.prepare(`
+    SELECT * FROM goal_boards WHERE id = ? AND user_id = ?
+  `).get(boardId, userId)
+}
+
+function getGoalForUser(userId, goalId) {
+  return db.prepare(`
+    SELECT goals.*
+    FROM goals
+    JOIN goal_boards ON goal_boards.id = goals.board_id
+    WHERE goals.id = ? AND goal_boards.user_id = ?
+  `).get(goalId, userId)
+}
+
+function getGoalActionForUser(userId, actionId) {
+  return db.prepare(`
+    SELECT goal_actions.*
+    FROM goal_actions
+    JOIN goals ON goals.id = goal_actions.goal_id
+    JOIN goal_boards ON goal_boards.id = goals.board_id
+    WHERE goal_actions.id = ? AND goal_boards.user_id = ?
+  `).get(actionId, userId)
+}
+
+export function createGoalBoard(userId, input) {
+  const { name, durationValue, durationUnit } = validateGoalBoardInput(input)
+  const id = randomUUID()
+  const timestamp = nowIso()
+  db.prepare(`
+    INSERT INTO goal_boards (
+      id, user_id, name, duration_value, duration_unit, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(id, userId, name, durationValue, durationUnit, timestamp, timestamp)
+  return listGoalBoards(userId)
+}
+
+export function updateGoalBoard(userId, boardId, input) {
+  if (!getGoalBoardForUser(userId, boardId)) throw new Error('Quadro de metas não encontrado')
+  const current = getGoalBoardForUser(userId, boardId)
+  const { name, durationValue, durationUnit } = validateGoalBoardInput({
+    name: input?.name ?? current.name,
+    durationValue: input?.durationValue ?? current.duration_value,
+    durationUnit: input?.durationUnit ?? current.duration_unit,
+  })
+  db.prepare(`
+    UPDATE goal_boards
+    SET name = ?, duration_value = ?, duration_unit = ?, updated_at = ?
+    WHERE id = ?
+  `).run(name, durationValue, durationUnit, nowIso(), boardId)
+  return listGoalBoards(userId)
+}
+
+export function deleteGoalBoard(userId, boardId) {
+  if (!getGoalBoardForUser(userId, boardId)) throw new Error('Quadro de metas não encontrado')
+  const count = db.prepare('SELECT COUNT(*) AS count FROM goal_boards WHERE user_id = ?').get(userId).count
+  if (count <= 1) throw new Error('Não é possível excluir o último quadro de metas')
+  db.prepare('DELETE FROM goal_boards WHERE id = ? AND user_id = ?').run(boardId, userId)
+  return listGoalBoards(userId)
+}
+
+export function createGoal(userId, boardId, input) {
+  if (!getGoalBoardForUser(userId, boardId)) throw new Error('Quadro de metas não encontrado')
+  const { description, requirements } = validateGoalInput(input)
+  const id = randomUUID()
+  const timestamp = nowIso()
+  db.prepare(`
+    INSERT INTO goals (id, board_id, description, requirements, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(id, boardId, description, requirements, timestamp, timestamp)
+  return listGoalBoards(userId)
+}
+
+export function updateGoal(userId, goalId, input) {
+  const current = getGoalForUser(userId, goalId)
+  if (!current) throw new Error('Meta não encontrada')
+  const { description, requirements } = validateGoalInput({
+    description: input?.description ?? current.description,
+    requirements: input?.requirements ?? current.requirements,
+  })
+  db.prepare(`
+    UPDATE goals SET description = ?, requirements = ?, updated_at = ? WHERE id = ?
+  `).run(description, requirements, nowIso(), goalId)
+  return listGoalBoards(userId)
+}
+
+export function deleteGoal(userId, goalId) {
+  if (!getGoalForUser(userId, goalId)) throw new Error('Meta não encontrada')
+  db.prepare('DELETE FROM goals WHERE id = ?').run(goalId)
+  return listGoalBoards(userId)
+}
+
+export function createGoalAction(userId, goalId, input) {
+  if (!getGoalForUser(userId, goalId)) throw new Error('Meta não encontrada')
+  const { description, frequency } = validateGoalActionInput(input)
+  const id = randomUUID()
+  const timestamp = nowIso()
+  db.prepare(`
+    INSERT INTO goal_actions (id, goal_id, description, frequency, done, created_at, updated_at)
+    VALUES (?, ?, ?, ?, 0, ?, ?)
+  `).run(id, goalId, description, frequency, timestamp, timestamp)
+  return listGoalBoards(userId)
+}
+
+export function updateGoalAction(userId, actionId, input) {
+  const current = getGoalActionForUser(userId, actionId)
+  if (!current) throw new Error('Plano de ação não encontrado')
+  const { description, frequency } = validateGoalActionInput({
+    description: input?.description ?? current.description,
+    frequency: input?.frequency ?? current.frequency,
+  })
+  db.prepare(`
+    UPDATE goal_actions
+    SET description = ?, frequency = ?, updated_at = ?
+    WHERE id = ?
+  `).run(description, frequency, nowIso(), actionId)
+  return listGoalBoards(userId)
+}
+
+export function toggleGoalAction(userId, actionId) {
+  const action = getGoalActionForUser(userId, actionId)
+  if (!action) throw new Error('Plano de ação não encontrado')
+  db.prepare('UPDATE goal_actions SET done = ?, updated_at = ? WHERE id = ?')
+    .run(action.done ? 0 : 1, nowIso(), actionId)
+  return listGoalBoards(userId)
+}
+
+export function deleteGoalAction(userId, actionId) {
+  if (!getGoalActionForUser(userId, actionId)) throw new Error('Plano de ação não encontrado')
+  db.prepare('DELETE FROM goal_actions WHERE id = ?').run(actionId)
+  return listGoalBoards(userId)
 }
 
 export { ALL_CATEGORIES }

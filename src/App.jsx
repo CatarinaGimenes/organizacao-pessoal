@@ -5,10 +5,14 @@ import styles from './App.module.css'
 import Sidebar from './components/Sidebar/Sidebar.jsx'
 import WeekPage from './pages/Week/WeekPage.jsx'
 import FinancePage from './pages/Finance/FinancePage.jsx'
+import FinanceDashboardPage from './pages/FinanceDashboard/FinanceDashboardPage.jsx'
 import MonthlyPage from './pages/Monthly/MonthlyPage.jsx'
+import GoalsPage from './pages/Goals/GoalsPage.jsx'
 import { useBoard } from './hooks/useBoard.js'
 import { useFinance } from './hooks/useFinance.js'
+import { useFinanceDashboard } from './hooks/useFinanceDashboard.js'
 import { useMonthly } from './hooks/useMonthly.js'
+import { useGoals } from './hooks/useGoals.js'
 import { getMonthKey, getWeekStart, todayKey } from './utils/calendar.js'
 
 /**
@@ -21,7 +25,9 @@ function App() {
   const [monthlyMonth, setMonthlyMonth] = useState(getMonthKey(todayKey()))
   const [monthlySelectedDate, setMonthlySelectedDate] = useState(todayKey)
   const location = useLocation()
-  const mode = location.pathname === '/financas' ? 'month' : 'week'
+  const mode = location.pathname === '/financas' || location.pathname === '/visualizacao-financeira'
+    ? 'month'
+    : 'week'
   const weekStart = getWeekStart(selectedDate)
   const month = getMonthKey(selectedDate)
   const { board, addTask, toggleTask, removeTask, moveTask, error: boardError } = useBoard(weekStart)
@@ -31,7 +37,10 @@ function App() {
     removeTransaction,
     error: financeError,
   } = useFinance(month, selectedDate)
+  const [dashboardPeriod, setDashboardPeriod] = useState('monthly')
+  const dashboard = useFinanceDashboard(selectedDate, dashboardPeriod)
   const monthly = useMonthly(monthlyMonth)
+  const goals = useGoals()
   const [menuOpen, setMenuOpen] = useState(false)
 
   const closeMenu = useCallback(() => setMenuOpen(false), [])
@@ -59,12 +68,12 @@ function App() {
         selectedDate={selectedDate}
         onSelectDate={setSelectedDate}
         onNavigate={setSelectedDate}
-        hideCalendar={location.pathname === '/mensal'}
+        hideCalendar={location.pathname === '/mensal' || location.pathname === '/metas'}
       />
 
       <main className={styles.main}>
         <div className={styles.content}>
-          {(boardError || financeError || monthly.error) && (
+          {(boardError || financeError || monthly.error || goals.error || dashboard.error) && (
             <p className={styles.error} role="alert">
               Não foi possível sincronizar os dados. Tente novamente.
             </p>
@@ -95,6 +104,19 @@ function App() {
               }
             />
             <Route
+              path="/visualizacao-financeira"
+              element={
+                <FinanceDashboardPage
+                  selectedDate={selectedDate}
+                  period={dashboardPeriod}
+                  onPeriodChange={setDashboardPeriod}
+                  transactions={dashboard.transactions}
+                  range={dashboard.range}
+                  loading={dashboard.loading}
+                />
+              }
+            />
+            <Route
               path="/mensal"
               element={
                 <MonthlyPage
@@ -117,6 +139,30 @@ function App() {
                   onAddGoal={monthly.addGoal}
                   onToggleGoal={monthly.toggleGoal}
                   onRemoveGoal={monthly.removeGoal}
+                />
+              }
+            />
+            <Route
+              path="/metas"
+              element={
+                <GoalsPage
+                  boards={goals.boards}
+                  selectedBoard={goals.selectedBoard}
+                  loading={goals.loading}
+                  canGoPrevious={goals.canGoPrevious}
+                  canGoNext={goals.canGoNext}
+                  onPrevious={goals.previousBoard}
+                  onNext={goals.nextBoard}
+                  onCreateBoard={goals.createBoard}
+                  onUpdateBoard={goals.updateBoard}
+                  onDeleteBoard={goals.deleteBoard}
+                  onAddGoal={goals.addGoal}
+                  onUpdateGoal={goals.updateGoal}
+                  onDeleteGoal={goals.deleteGoal}
+                  onAddAction={goals.addAction}
+                  onUpdateAction={goals.updateAction}
+                  onToggleAction={goals.toggleAction}
+                  onDeleteAction={goals.deleteAction}
                 />
               }
             />
