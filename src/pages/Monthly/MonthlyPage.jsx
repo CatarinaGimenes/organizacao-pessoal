@@ -190,11 +190,12 @@ function formatLongDate(date) {
 function EventOverview({ month, events }) {
   const today = todayKey()
   const bounds = getMonthBounds(month)
+  const pendingEvents = events.filter((event) => !event.done)
   const todayEvents = month === today.slice(0, 7)
-    ? events.filter((event) => event.date === today)
+    ? pendingEvents.filter((event) => event.date === today)
     : []
   const reference = month === today.slice(0, 7) ? today : bounds.start
-  const upcoming = [...events]
+  const upcoming = [...pendingEvents]
     .filter((event) => event.date > reference || (month !== today.slice(0, 7) && event.date === reference))
     .sort((left, right) => left.date.localeCompare(right.date) || left.id.localeCompare(right.id))
     .slice(0, 5)
