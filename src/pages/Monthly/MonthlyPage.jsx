@@ -125,10 +125,10 @@ function MonthlyCalendar({ month, selectedDate, onSelectDate, onChangeMonth, eve
               <span>{item.day}</span>
               {dayEvents.length > 0 && (
                 <span className={styles.dayEvents}>
-                  {dayEvents.slice(0, 3).map((event) => (
+                  {dayEvents.slice(0, 1).map((event) => (
                     <span key={event.id} title={event.title}>{event.title}</span>
                   ))}
-                  {dayEvents.length > 3 && <small>+{dayEvents.length - 3}</small>}
+                  {dayEvents.length > 1 && <small>+{dayEvents.length - 1}</small>}
                 </span>
               )}
             </button>
