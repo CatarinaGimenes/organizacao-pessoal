@@ -1,4 +1,5 @@
-.calendar { padding: var(--space-3); background: var(--color-neutral-50); border: 1px solid var(--color-neutral-100); border-radius: var(--radius-md); }
+.calendar { padding: var(--space-3); background: var(--color-neutral-0); border: 1px solid var(--color-neutral-200); border-radius: var(--radius-md); box-shadow: var(--shadow-soft); }
+.calendar:focus-within { border-color: var(--color-rose-300); box-shadow: 0 0 0 2px var(--color-rose-100); }
 .header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-1); font-size: .82rem; text-transform: capitalize; }
 .arrow { display: grid; place-items: center; width: 26px; height: 26px; padding: 0; color: var(--color-neutral-600); background: transparent; border: 0; border-radius: var(--radius-sm); }
 .arrow:hover { color: var(--color-rose-700); background: var(--color-rose-100); }
