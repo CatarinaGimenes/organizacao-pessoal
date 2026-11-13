@@ -42,6 +42,10 @@ export function getMonthKey(dateKey) {
   return dateKey.slice(0, 7)
 }
 
+export function getNavigationDate(monthKey, currentDate = todayKey()) {
+  return monthKey === getMonthKey(currentDate) ? currentDate : `${monthKey}-01`
+}
+
 export function getMonthBounds(monthKey) {
   const [year, month] = (monthKey ?? '').split('-').map(Number)
   if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) return null

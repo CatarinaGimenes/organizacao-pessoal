@@ -4,6 +4,7 @@ import {
   addMonths,
   getCalendarDays,
   getMonthKey,
+  getNavigationDate,
   getWeekStart,
   todayKey,
 } from '../../utils/calendar.js'
@@ -21,15 +22,19 @@ export default function Calendar({ selectedDate, mode, onSelectDate, onNavigate 
   const today = todayKey()
   const selectedWeekStart = mode === 'week' ? getWeekStart(selectedDate) : null
   const selectedWeekEnd = selectedWeekStart ? addDays(selectedWeekStart, 6) : null
+  const navigateMonth = (amount) => {
+    const targetMonth = getMonthKey(addMonths(`${monthKey}-01`, amount))
+    onNavigate(getNavigationDate(targetMonth))
+  }
 
   return (
     <section className={styles.calendar} aria-label="Calendário">
       <header className={styles.header}>
-        <button type="button" className={styles.arrow} aria-label="Mês anterior" onClick={() => onNavigate(addMonths(`${monthKey}-01`, -1))}>
+        <button type="button" className={styles.arrow} aria-label="Mês anterior" onClick={() => navigateMonth(-1)}>
           <ChevronLeft size={16} />
         </button>
         <strong>{MONTHS[month - 1]} {year}</strong>
-        <button type="button" className={styles.arrow} aria-label="Próximo mês" onClick={() => onNavigate(addMonths(`${monthKey}-01`, 1))}>
+        <button type="button" className={styles.arrow} aria-label="Próximo mês" onClick={() => navigateMonth(1)}>
           <ChevronRight size={16} />
         </button>
       </header>
