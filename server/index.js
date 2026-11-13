@@ -64,7 +64,8 @@ async function handler(request, response) {
   }
 
   if (request.method === 'GET' && parts[1] === 'transactions') {
-    const transactions = listTransactions(userId)
+    const month = url.searchParams.get('month') ?? new Date().toISOString().slice(0, 7)
+    const transactions = listTransactions(userId, month)
     return sendJson(response, 200, {
       transactions,
       summary: calculateSummary(transactions),
@@ -99,14 +100,16 @@ async function handler(request, response) {
   }
 
   if (request.method === 'POST' && parts.length === 2 && parts[1] === 'transactions') {
+    const body = await readJson(request)
     return sendJson(response, 201, {
-      transactions: createTransaction(userId, await readJson(request)),
+      transactions: createTransaction(userId, body),
     })
   }
 
   if (request.method === 'DELETE' && parts[1] === 'transactions' && parts[2]) {
+    const month = url.searchParams.get('month') ?? new Date().toISOString().slice(0, 7)
     return sendJson(response, 200, {
-      transactions: deleteTransaction(userId, parts[2]),
+      transactions: deleteTransaction(userId, parts[2], month),
     })
   }
 

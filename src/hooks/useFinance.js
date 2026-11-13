@@ -11,15 +11,21 @@ import { createInitialTransactions } from '../state/finance.js'
  * Instanciado no App (e não na página) para não perder os registros ao
  * navegar entre as telas.
  */
-export function useFinance() {
-  const [transactions, setTransactions] = useState(createInitialTransactions)
+export function useFinance(month, selectedDate) {
+  const [transactionsState, setTransactionsState] = useState(() => ({
+    period: month,
+    data: createInitialTransactions(),
+  }))
+  const transactions = transactionsState.period === month
+    ? transactionsState.data
+    : createInitialTransactions()
   const [error, setError] = useState(null)
 
   useEffect(() => {
     let active = true
-    api.getTransactions()
+    api.getTransactions(month)
       .then((response) => {
-        if (active) setTransactions(response.transactions)
+        if (active) setTransactionsState({ period: month, data: response.transactions })
       })
       .catch((requestError) => {
         if (active) setError(requestError)
@@ -29,25 +35,25 @@ export function useFinance() {
     return () => {
       active = false
     }
-  }, [])
+  }, [month])
 
   const addTransaction = useCallback((input) => {
-    api.createTransaction(input)
-      .then((response) => setTransactions(response.transactions))
+    api.createTransaction({ ...input, occurredOn: input.occurredOn ?? selectedDate })
+      .then((response) => setTransactionsState({ period: month, data: response.transactions }))
       .catch((requestError) => {
         setError(requestError)
         console.error(requestError)
       })
-  }, [])
+  }, [month, selectedDate])
 
   const removeTransaction = useCallback((id) => {
-    api.removeTransaction(id)
-      .then((response) => setTransactions(response.transactions))
+    api.removeTransaction(id, month)
+      .then((response) => setTransactionsState({ period: month, data: response.transactions }))
       .catch((requestError) => {
         setError(requestError)
         console.error(requestError)
       })
-  }, [])
+  }, [month])
 
   return { transactions, addTransaction, removeTransaction, error }
 }

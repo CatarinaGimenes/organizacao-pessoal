@@ -1,0 +1,13 @@
+.calendar { padding: var(--space-3); background: var(--color-neutral-50); border: 1px solid var(--color-neutral-100); border-radius: var(--radius-md); }
+.header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-1); font-size: .82rem; text-transform: capitalize; }
+.arrow { display: grid; place-items: center; width: 26px; height: 26px; padding: 0; color: var(--color-neutral-600); background: transparent; border: 0; border-radius: var(--radius-sm); }
+.arrow:hover { color: var(--color-rose-700); background: var(--color-rose-100); }
+.today { display: block; margin: var(--space-2) auto; padding: 2px var(--space-2); color: var(--color-rose-700); background: var(--color-rose-50); border: 1px solid var(--color-rose-200); border-radius: var(--radius-full); font-size: .7rem; }
+.weekdays, .grid { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; }
+.weekdays { color: var(--color-neutral-500); font-size: .65rem; }
+.day { display: grid; place-items: center; aspect-ratio: 1; padding: 0; color: var(--color-neutral-700); background: transparent; border: 1px solid transparent; border-radius: var(--radius-full); font-size: .72rem; }
+.day[data-current-month='false'] { color: var(--color-neutral-400); }
+.day[data-today='true'] { border-color: var(--color-rose-300); }
+.day[data-selected-week='true'] { background: var(--color-rose-50); }
+.day[data-selected='true'] { color: var(--color-neutral-900); background: var(--color-rose-200); border-color: var(--color-rose-400); font-weight: 700; }
+.day:hover { background: var(--color-rose-100); }

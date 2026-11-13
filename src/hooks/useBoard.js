@@ -8,15 +8,19 @@ import { createInitialBoard } from '../state/board.js'
  * As regras locais vivem em `src/state/board.js`; este hook sincroniza o
  * estado renderizado com a API persistente.
  */
-export function useBoard() {
-  const [board, setBoard] = useState(createInitialBoard)
+export function useBoard(weekStart) {
+  const [boardState, setBoardState] = useState(() => ({
+    period: weekStart,
+    data: createInitialBoard(),
+  }))
+  const board = boardState.period === weekStart ? boardState.data : createInitialBoard()
   const [error, setError] = useState(null)
 
   useEffect(() => {
     let active = true
-    api.getBoard()
+    api.getBoard(weekStart)
       .then((response) => {
-        if (active) setBoard(response.board)
+        if (active) setBoardState({ period: weekStart, data: response.board })
       })
       .catch((requestError) => {
         if (active) setError(requestError)
@@ -26,16 +30,16 @@ export function useBoard() {
     return () => {
       active = false
     }
-  }, [])
+  }, [weekStart])
 
   const addTask = useCallback((dayId, text) => {
-    api.createTask({ dayId, text })
-      .then((response) => setBoard(response.board))
+    api.createTask({ dayId, text, weekStart })
+      .then((response) => setBoardState({ period: weekStart, data: response.board }))
       .catch((requestError) => {
         setError(requestError)
         console.error(requestError)
       })
-  }, [])
+  }, [weekStart])
 
   const toggleTask = useCallback((dayId, taskId) => {
     const task = board.find((day) => day.id === dayId)?.tasks.find((item) => item.id === taskId)
@@ -44,32 +48,32 @@ export function useBoard() {
     api.updateTask(taskId, {
       done: !task.done,
     })
-      .then((response) => setBoard(response.board))
+      .then((response) => setBoardState({ period: weekStart, data: response.board }))
       .catch((requestError) => {
         setError(requestError)
         console.error(requestError)
       })
-  }, [board])
+  }, [board, weekStart])
 
   const removeTask = useCallback((dayId, taskId) => {
     void dayId
     api.removeTask(taskId)
-      .then((response) => setBoard(response.board))
+      .then((response) => setBoardState({ period: weekStart, data: response.board }))
       .catch((requestError) => {
         setError(requestError)
         console.error(requestError)
       })
-  }, [])
+  }, [weekStart])
 
   const moveTask = useCallback((sourceDayId, taskId, targetDayId, targetIndex) => {
     void sourceDayId
     api.moveTask(taskId, targetDayId, targetIndex)
-      .then((response) => setBoard(response.board))
+      .then((response) => setBoardState({ period: weekStart, data: response.board }))
       .catch((requestError) => {
         setError(requestError)
         console.error(requestError)
       })
-  }, [])
+  }, [weekStart])
 
   return { board, addTask, toggleTask, removeTask, moveTask, error }
 }

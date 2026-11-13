@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import { Sticker, X } from 'lucide-react'
+import Calendar from '../Calendar/Calendar.jsx'
 import styles from './Sidebar.module.css'
 
 /**
@@ -9,7 +10,7 @@ import styles from './Sidebar.module.css'
  * `open`/`onClose` (o botão hambúrguer fica na topbar do App).
  * Os itens usam NavLink: o react-router marca `aria-current="page"` sozinho.
  */
-function Sidebar({ open, onClose }) {
+function Sidebar({ open, onClose, mode, selectedDate, onSelectDate, onNavigate }) {
   // Fecha o drawer com a tecla ESC — só roda no cliente, seguro para SSR
   useEffect(() => {
     if (!open) return undefined
@@ -52,6 +53,13 @@ function Sidebar({ open, onClose }) {
             <X size={20} />
           </button>
         </div>
+
+        <Calendar
+          mode={mode}
+          selectedDate={selectedDate}
+          onSelectDate={onSelectDate}
+          onNavigate={onNavigate}
+        />
 
         {/* Navegação ------------------------------------------------------------ */}
         <nav className={styles.nav} aria-label="Navegação principal">

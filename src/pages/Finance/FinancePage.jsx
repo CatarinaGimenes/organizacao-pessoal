@@ -10,7 +10,7 @@ import styles from './FinancePage.module.css'
  * Os registros vêm do hook `useFinance`, que vive no App — navegar para
  * outra tela não zera o que foi cadastrado.
  */
-function FinancePage({ transactions, onAdd, onRemove }) {
+function FinancePage({ transactions, onAdd, onRemove, selectedDate }) {
   const summary = calculateSummary(transactions)
 
   return (
@@ -28,7 +28,7 @@ function FinancePage({ transactions, onAdd, onRemove }) {
 
       <FinanceSummary summary={summary} />
 
-      <TransactionForm onAdd={onAdd} />
+      <TransactionForm onAdd={onAdd} selectedDate={selectedDate} />
 
       <div className={styles.lists}>
         <TransactionList

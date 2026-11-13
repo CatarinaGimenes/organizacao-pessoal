@@ -266,13 +266,27 @@ export function moveTask(userId, taskId, targetDayId, targetIndex) {
   return getBoard(userId, plan.week_start)
 }
 
-export function listTransactions(userId) {
+export function getMonthBounds(month) {
+  if (typeof month !== 'string' || !/^\d{4}-\d{2}$/.test(month)) {
+    throw new Error('month deve estar no formato AAAA-MM')
+  }
+  const [year, monthNumber] = month.split('-').map(Number)
+  const first = `${month}-01`
+  const last = new Date(Date.UTC(year, monthNumber, 0)).toISOString().slice(0, 10)
+  if (!isValidDate(first) || monthNumber < 1 || monthNumber > 12) {
+    throw new Error('month inválido')
+  }
+  return { first, last }
+}
+
+export function listTransactions(userId, month) {
+  const { first, last } = getMonthBounds(month)
   return db.prepare(`
     SELECT id, type, description, amount_cents, category, occurred_on, created_at, updated_at
     FROM transactions
-    WHERE user_id = ?
-    ORDER BY created_at, id
-  `).all(userId).map(mapTransaction)
+    WHERE user_id = ? AND occurred_on BETWEEN ? AND ?
+    ORDER BY occurred_on, created_at, id
+  `).all(userId, first, last).map(mapTransaction)
 }
 
 function isValidCategory(type, category) {
@@ -300,15 +314,16 @@ export function createTransaction(userId, input) {
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(id, userId, type, description, amount, category, occurredOn, timestamp, timestamp)
 
-  return listTransactions(userId)
+  return listTransactions(userId, occurredOn.slice(0, 7))
 }
 
-export function deleteTransaction(userId, transactionId) {
+export function deleteTransaction(userId, transactionId, month) {
+  getMonthBounds(month)
   const result = db.prepare(`
     DELETE FROM transactions WHERE id = ? AND user_id = ?
   `).run(transactionId, userId)
   if (result.changes === 0) throw new Error('Transação não encontrada')
-  return listTransactions(userId)
+  return listTransactions(userId, month)
 }
 
 export function calculateSummary(transactions) {

@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 import styles from './App.module.css'
 import Sidebar from './components/Sidebar/Sidebar.jsx'
@@ -7,6 +7,7 @@ import WeekPage from './pages/Week/WeekPage.jsx'
 import FinancePage from './pages/Finance/FinancePage.jsx'
 import { useBoard } from './hooks/useBoard.js'
 import { useFinance } from './hooks/useFinance.js'
+import { getMonthKey, getWeekStart, todayKey } from './utils/calendar.js'
 
 /**
  * Shell do aplicativo: topbar, sidebar e conteúdo roteado.
@@ -14,13 +15,18 @@ import { useFinance } from './hooks/useFinance.js'
  * memória — se vivessem nas páginas, navegar entre telas perdia os dados.
  */
 function App() {
-  const { board, addTask, toggleTask, removeTask, moveTask, error: boardError } = useBoard()
+  const [selectedDate, setSelectedDate] = useState(todayKey)
+  const location = useLocation()
+  const mode = location.pathname === '/financas' ? 'month' : 'week'
+  const weekStart = getWeekStart(selectedDate)
+  const month = getMonthKey(selectedDate)
+  const { board, addTask, toggleTask, removeTask, moveTask, error: boardError } = useBoard(weekStart)
   const {
     transactions,
     addTransaction,
     removeTransaction,
     error: financeError,
-  } = useFinance()
+  } = useFinance(month, selectedDate)
   const [menuOpen, setMenuOpen] = useState(false)
 
   const closeMenu = useCallback(() => setMenuOpen(false), [])
@@ -41,7 +47,14 @@ function App() {
         </button>
       </div>
 
-      <Sidebar open={menuOpen} onClose={closeMenu} />
+      <Sidebar
+        open={menuOpen}
+        onClose={closeMenu}
+        mode={mode}
+        selectedDate={selectedDate}
+        onSelectDate={setSelectedDate}
+        onNavigate={setSelectedDate}
+      />
 
       <main className={styles.main}>
         <div className={styles.content}>
@@ -60,6 +73,7 @@ function App() {
                   onToggle={toggleTask}
                   onRemove={removeTask}
                   onMove={moveTask}
+                  weekStart={weekStart}
                 />
               }
             />
@@ -70,6 +84,7 @@ function App() {
                   transactions={transactions}
                   onAdd={addTransaction}
                   onRemove={removeTransaction}
+                  selectedDate={selectedDate}
                 />
               }
             />

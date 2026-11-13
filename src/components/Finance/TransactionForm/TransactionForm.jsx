@@ -8,7 +8,7 @@ import styles from './TransactionForm.module.css'
  * O tipo (gasto/ganho) controla quais categorias aparecem no <select>:
  * trocar de tipo reseta a categoria para a primeira da nova lista.
  */
-export default function TransactionForm({ onAdd }) {
+export default function TransactionForm({ onAdd, selectedDate }) {
   const [type, setType] = useState('gasto')
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
@@ -28,7 +28,7 @@ export default function TransactionForm({ onAdd }) {
     event.preventDefault()
     if (!canSubmit) return
 
-    onAdd({ type, description, amount: amountInCents, category })
+    onAdd({ type, description, amount: amountInCents, category, occurredOn: selectedDate })
     setDescription('')
     setAmount('')
   }

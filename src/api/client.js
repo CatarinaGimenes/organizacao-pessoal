@@ -15,7 +15,7 @@ async function request(path, options = {}) {
 }
 
 export const api = {
-  getBoard: () => request('/board'),
+  getBoard: (weekStart) => request(`/board?weekStart=${encodeURIComponent(weekStart)}`),
   createTask: (input) =>
     request('/tasks', {
       method: 'POST',
@@ -35,14 +35,14 @@ export const api = {
     request(`/tasks/${id}`, {
       method: 'DELETE',
     }),
-  getTransactions: () => request('/transactions'),
+  getTransactions: (month) => request(`/transactions?month=${encodeURIComponent(month)}`),
   createTransaction: (input) =>
     request('/transactions', {
       method: 'POST',
       body: JSON.stringify(input),
     }),
-  removeTransaction: (id) =>
-    request(`/transactions/${id}`, {
+  removeTransaction: (id, month) =>
+    request(`/transactions/${id}?month=${encodeURIComponent(month)}`, {
       method: 'DELETE',
     }),
 }

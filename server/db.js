@@ -59,6 +59,9 @@ db.exec(`
 
   CREATE INDEX IF NOT EXISTS transactions_user_created
     ON transactions (user_id, created_at);
+
+  CREATE INDEX IF NOT EXISTS transactions_user_occurred
+    ON transactions (user_id, occurred_on);
 `)
 
 const now = new Date().toISOString()
