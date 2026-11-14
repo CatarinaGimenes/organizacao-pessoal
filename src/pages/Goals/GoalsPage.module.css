@@ -19,6 +19,7 @@
 .arrowButton:disabled,.iconButton:disabled { cursor:not-allowed; opacity:.4; }
 .boardControls,.cardActions { display:flex; gap:var(--space-1); }
 .newGoal,.goalCard { margin-top:var(--space-5); padding:var(--space-5); border:1px solid var(--color-neutral-100); border-radius:var(--radius-lg); background:var(--color-neutral-0); box-shadow:var(--shadow-soft); }
+.goalCard { display:flex; flex-direction:column; }
 .newGoal { display:grid; gap:var(--space-3); }
 .newGoal h2 { font-size:1.2rem; }
 .field { display:grid; gap:var(--space-1); min-width:0; }
@@ -29,7 +30,13 @@
 .sectionHeader { align-items:flex-end; margin-bottom:var(--space-4); }
 .sectionHeader h2 { font-size:1.25rem; }
 .sectionHeader>span { padding:var(--space-2) var(--space-3); color:var(--color-neutral-600); border:1px solid var(--color-neutral-200); border-radius:var(--radius-full); background:var(--color-neutral-0); }
-.goalList { display:grid; gap:var(--space-4); }
+.goalList { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); align-items:stretch; gap:var(--space-4); }
+.goalList > .goalCard { grid-column:span 2; }
+.goalList > .goalCard:nth-last-child(1):nth-child(3n + 1) { grid-column:1 / -1; }
+.goalList > .goalCard:nth-last-child(2):nth-child(3n + 1),
+.goalList > .goalCard:nth-last-child(1):nth-child(3n + 2) { grid-column:span 3; }
+.singleGoalList { grid-template-columns:repeat(6,minmax(0,1fr)); }
+.singleGoalList > .goalCard { grid-column:1 / -1; }
 .goalHeader { align-items:flex-start; }
 .goalHeader h2 { margin-top:var(--space-1); font-size:1.15rem; }
 .requirements { margin-top:var(--space-4); padding:var(--space-3); border-left:3px solid var(--color-green-300); background:var(--color-green-50); }
@@ -57,6 +64,15 @@
 .modalHeader { display:flex; align-items:flex-start; justify-content:space-between; gap:var(--space-3); margin-bottom:var(--space-5); }
 .modalHeader h2 { margin-top:var(--space-1); font-size:1.25rem; }
 .form { display:grid; gap:var(--space-4); }
+@media (max-width:1100px) and (min-width:768px) {
+  .goalList { grid-template-columns:repeat(4,minmax(0,1fr)); }
+  .goalList > .goalCard { grid-column:span 2; }
+  .goalList > .goalCard:nth-last-child(1):nth-child(3n + 1) { grid-column:1 / -1; }
+  .goalList > .goalCard:nth-last-child(2):nth-child(3n + 1),
+  .goalList > .goalCard:nth-last-child(1):nth-child(3n + 2) { grid-column:span 2; }
+  .singleGoalList { grid-template-columns:repeat(4,minmax(0,1fr)); }
+  .singleGoalList > .goalCard { grid-column:1 / -1; }
+}
 @media (max-width:767px) {
   .header,.boardBar { align-items:stretch; flex-direction:column; }
   .header .primaryButton { width:100%; }
@@ -67,4 +83,10 @@
   .frequency { grid-column:1 / -1; grid-row:2; }
   .actionForm { grid-template-columns:1fr; }
   .inlineFields { grid-template-columns:1fr; }
+  .goalList,.singleGoalList { grid-template-columns:1fr; }
+  .goalList > .goalCard,
+  .goalList > .goalCard:nth-last-child(1):nth-child(3n + 1),
+  .goalList > .goalCard:nth-last-child(2):nth-child(3n + 1),
+  .goalList > .goalCard:nth-last-child(1):nth-child(3n + 2),
+  .singleGoalList > .goalCard { grid-column:1; }
 }

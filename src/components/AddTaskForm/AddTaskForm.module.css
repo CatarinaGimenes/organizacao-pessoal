@@ -2,7 +2,8 @@
   display: flex;
   gap: var(--space-2);
   margin-top: auto;
-  padding-top: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-neutral-200);
 }
 
 .input {
@@ -11,8 +12,8 @@
   padding: var(--space-2) var(--space-3);
   font-size: 0.85rem;
   color: var(--color-neutral-900);
-  background-color: var(--color-neutral-50);
-  border: 1px solid var(--color-neutral-200);
+  background-color: var(--color-neutral-0);
+  border: 1px solid var(--color-neutral-400);
   border-radius: var(--radius-full);
   transition:
     border-color var(--transition-fast),
@@ -29,7 +30,8 @@
 
 .input:focus {
   background-color: var(--color-neutral-0);
-  border-color: var(--color-rose-300);
+  border-color: var(--color-rose-700);
+  outline: 2px solid var(--color-rose-100);
 }
 
 .button {
@@ -42,8 +44,8 @@
   font-size: 1.15rem;
   line-height: 1;
   color: var(--color-rose-700);
-  background-color: var(--color-rose-100);
-  border: 1px solid var(--color-rose-200);
+  background-color: var(--color-rose-200);
+  border: 1px solid var(--color-rose-400);
   border-radius: var(--radius-full);
   transition:
     background-color var(--transition-fast),

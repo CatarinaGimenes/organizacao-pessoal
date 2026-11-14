@@ -2,9 +2,9 @@
   display: flex;
   align-items: flex-start;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-3);
   background-color: var(--color-neutral-0);
-  border: 1px solid var(--color-neutral-100);
+  border: 1px solid var(--color-neutral-200);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-soft);
   transition:
@@ -15,12 +15,13 @@
 
 .item:hover {
   border-color: var(--color-rose-200);
+  box-shadow: var(--shadow-card);
 }
 
 /* Concluída ------------------------------------------------------------- */
 .done {
-  background-color: var(--color-green-50);
-  border-color: var(--color-green-200);
+  background-color: var(--color-green-100);
+  border-color: var(--color-green-600);
 }
 
 .done .text {
@@ -123,7 +124,7 @@
 
 .handle:hover {
   color: var(--color-neutral-600);
-  background-color: var(--color-neutral-100);
+  background-color: var(--color-neutral-200);
 }
 
 .handle:active {

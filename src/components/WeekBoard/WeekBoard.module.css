@@ -4,13 +4,13 @@
   align-items: flex-start;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
-  padding-bottom: var(--space-3);
-  scrollbar-color: var(--color-rose-200) transparent;
+  padding: 2px 2px var(--space-3);
+  scrollbar-color: var(--color-rose-400) var(--color-neutral-100);
 }
 
 /* Cada coluna ocupa uma largura fixa e confortável durante a rolagem */
 .slot {
-  flex: 0 0 clamp(240px, 26vw, 300px);
+  flex: 0 0 clamp(280px, 26vw, 320px);
   scroll-snap-align: start;
   display: flex;
 }
@@ -24,13 +24,15 @@
 @media (min-width: 1440px) {
   .board {
     display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-    overflow-x: visible;
+    grid-template-columns: repeat(7, minmax(200px, 1fr));
+    overflow-x: auto;
     scroll-snap-type: none;
+    gap: var(--space-3);
   }
 
   .slot {
     flex: initial;
+    min-width: 200px;
   }
 }
 

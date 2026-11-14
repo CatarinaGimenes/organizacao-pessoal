@@ -359,7 +359,7 @@ export default function GoalsPage({
         {selectedBoard.goals.length === 0 ? (
           <p className={styles.empty}>Nenhuma meta cadastrada neste quadro.</p>
         ) : (
-          <div className={styles.goalList}>
+          <div className={`${styles.goalList} ${selectedBoard.goals.length === 1 ? styles.singleGoalList : ''}`}>
             {selectedBoard.goals.map((goal) => (
               <GoalCard
                 key={goal.id}
