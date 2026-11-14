@@ -38,8 +38,19 @@ export function useFinance(month, selectedDate) {
   }, [month])
 
   const addTransaction = useCallback((input) => {
-    api.createTransaction({ ...input, occurredOn: input.occurredOn ?? selectedDate })
-      .then((response) => setTransactionsState({ period: month, data: response.transactions }))
+    const occurredOn = input.occurredOn ?? selectedDate
+    const occurredMonth = occurredOn.slice(0, 7)
+    api.createTransaction({ ...input, occurredOn })
+      .then((response) => {
+        if (occurredMonth === month) {
+          setTransactionsState({ period: month, data: response.transactions })
+          return
+        }
+        return api.getTransactions(month)
+          .then((currentMonthResponse) => {
+            setTransactionsState({ period: month, data: currentMonthResponse.transactions })
+          })
+      })
       .catch((requestError) => {
         setError(requestError)
         console.error(requestError)

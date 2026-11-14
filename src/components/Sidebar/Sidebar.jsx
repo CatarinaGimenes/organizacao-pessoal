@@ -66,6 +66,9 @@ function Sidebar({ open, onClose, mode, selectedDate, onSelectDate, onNavigate, 
         {/* Navegação ------------------------------------------------------------ */}
         <nav className={styles.nav} aria-label="Navegação principal">
           <NavLink to="/" end onClick={onClose}>
+            Painel Geral
+          </NavLink>
+          <NavLink to="/semanal" onClick={onClose}>
             Planejamento Semanal
           </NavLink>
           <NavLink to="/financas" onClick={onClose}>

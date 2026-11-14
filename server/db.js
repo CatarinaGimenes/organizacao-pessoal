@@ -127,6 +127,32 @@ db.exec(`
 
   CREATE INDEX IF NOT EXISTS goal_actions_goal_created
     ON goal_actions (goal_id, created_at, id);
+
+  CREATE TABLE IF NOT EXISTS todos (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    done INTEGER NOT NULL DEFAULT 0 CHECK (done IN (0, 1)),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  CREATE INDEX IF NOT EXISTS todos_user_created
+    ON todos (user_id, created_at, id);
+
+  CREATE TABLE IF NOT EXISTS sticky_notes (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    color TEXT NOT NULL,
+    position_x REAL NOT NULL DEFAULT 0,
+    position_y REAL NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  CREATE INDEX IF NOT EXISTS sticky_notes_user_created
+    ON sticky_notes (user_id, created_at, id);
 `)
 
 const now = new Date().toISOString()

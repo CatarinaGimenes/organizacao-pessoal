@@ -70,4 +70,12 @@ export const api = {
     request(`/goals/actions/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
   toggleGoalAction: (id) => request(`/goals/actions/${id}/toggle`, { method: 'PATCH' }),
   deleteGoalAction: (id) => request(`/goals/actions/${id}`, { method: 'DELETE' }),
+  getTodos: () => request('/todos'),
+  createTodo: (input) => request('/todos', { method: 'POST', body: JSON.stringify(input) }),
+  toggleTodo: (id) => request(`/todos/${id}/toggle`, { method: 'PATCH' }),
+  deleteTodo: (id) => request(`/todos/${id}`, { method: 'DELETE' }),
+  getStickyNotes: () => request('/sticky-notes'),
+  createStickyNote: (input) => request('/sticky-notes', { method: 'POST', body: JSON.stringify(input) }),
+  updateStickyNote: (id, input) => request(`/sticky-notes/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
+  deleteStickyNote: (id) => request(`/sticky-notes/${id}`, { method: 'DELETE' }),
 }

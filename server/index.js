@@ -32,6 +32,14 @@ import {
   updateGoalAction,
   toggleGoalAction,
   deleteGoalAction,
+  listTodos,
+  createTodo,
+  toggleTodo,
+  deleteTodo,
+  listStickyNotes,
+  createStickyNote,
+  updateStickyNote,
+  deleteStickyNote,
 } from './domain.js'
 
 const port = Number(process.env.PORT ?? 3001)
@@ -109,6 +117,38 @@ async function handler(request, response) {
 
   if (request.method === 'GET' && parts[1] === 'goals') {
     return sendJson(response, 200, { boards: listGoalBoards(userId) })
+  }
+
+  if (request.method === 'GET' && parts[1] === 'todos') {
+    return sendJson(response, 200, { todos: listTodos(userId) })
+  }
+  if (request.method === 'POST' && parts.length === 2 && parts[1] === 'todos') {
+    return sendJson(response, 201, { todos: createTodo(userId, await readJson(request)) })
+  }
+  if (parts[1] === 'todos' && parts[2]) {
+    const todoId = parts[2]
+    if (request.method === 'PATCH' && parts[3] === 'toggle') {
+      return sendJson(response, 200, { todos: toggleTodo(userId, todoId) })
+    }
+    if (request.method === 'DELETE' && !parts[3]) {
+      return sendJson(response, 200, { todos: deleteTodo(userId, todoId) })
+    }
+  }
+
+  if (request.method === 'GET' && parts[1] === 'sticky-notes') {
+    return sendJson(response, 200, { stickyNotes: listStickyNotes(userId) })
+  }
+  if (request.method === 'POST' && parts.length === 2 && parts[1] === 'sticky-notes') {
+    return sendJson(response, 201, { stickyNotes: createStickyNote(userId, await readJson(request)) })
+  }
+  if (parts[1] === 'sticky-notes' && parts[2]) {
+    const noteId = parts[2]
+    if (request.method === 'PATCH') {
+      return sendJson(response, 200, { stickyNotes: updateStickyNote(userId, noteId, await readJson(request)) })
+    }
+    if (request.method === 'DELETE') {
+      return sendJson(response, 200, { stickyNotes: deleteStickyNote(userId, noteId) })
+    }
   }
 
   if (request.method === 'POST' && parts.length === 2 && parts[1] === 'tasks') {
@@ -245,7 +285,7 @@ async function handler(request, response) {
 
 const server = createServer((request, response) => {
   handler(request, response).catch((error) => {
-    const status = /não encontrada|inválid|obrigatóri|deve|Categoria|Tipo|Tarefa|Transação|Evento|Meta|Quadro|Periodicidade|duração|Descrição|Requisitos|ação/.test(error.message)
+    const status = /não encontrada|inválid|obrigatóri|deve|Categoria|Tipo|Tarefa|Transação|Evento|Meta|Quadro|Periodicidade|duração|Descrição|Requisitos|ação|TO DO|Post-it|post-it|Cor de/.test(error.message)
       ? 400
       : 500
     sendJson(response, status, { error: error.message })

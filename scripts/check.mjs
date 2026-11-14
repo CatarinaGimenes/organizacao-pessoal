@@ -29,6 +29,13 @@ import {
   toggleMonthlyEvent,
   toggleMonthlyGoal,
 } from '../src/state/monthly.js'
+import { addTodo, createInitialTodos, removeTodo, toggleTodo } from '../src/state/todo.js'
+import {
+  addStickyNote,
+  createInitialStickyNotes,
+  removeStickyNote,
+  updateStickyNote,
+} from '../src/state/stickyNotes.js'
 
 const results = []
 const check = (name, ok) => results.push([name, ok])
@@ -224,6 +231,24 @@ check('remove evento mensal', removeMonthlyEvent(monthlyWithEvent, monthlyWithEv
 const monthlyWithGoal = addMonthlyGoal(monthly, { title: 'Ler um livro' })
 check('meta mensal e toggle', toggleMonthlyGoal(monthlyWithGoal, monthlyWithGoal.goals[0].id).goals[0].done)
 
+/* ----------------------------------------------- regras do painel */
+const todos = createInitialTodos()
+const todoAdded = addTodo(todos, { title: '  Comprar café  ' })
+check('TO DO apara o título', todoAdded[0].title === 'Comprar café')
+check('TO DO é imutável', todos.length === 0)
+check('TO DO alterna conclusão', toggleTodo(todoAdded, todoAdded[0].id)[0].done)
+check('TO DO remove pelo id', removeTodo(todoAdded, todoAdded[0].id).length === 0)
+
+const notes = createInitialStickyNotes()
+const noteAdded = addStickyNote(notes, { content: '  Ideia importante  ', color: 'yellow' })
+check('post-it apara o conteúdo', noteAdded[0].content === 'Ideia importante')
+check('post-it é imutável', notes.length === 0)
+check(
+  'post-it atualiza conteúdo e posição',
+  updateStickyNote(noteAdded, noteAdded[0].id, { content: 'Nova ideia', positionX: 30 })[0].positionX === 30,
+)
+check('post-it remove pelo id', removeStickyNote(noteAdded, noteAdded[0].id).length === 0)
+
 /* ------------------------------------------------------------- render */
 
 const server = await createServer({
@@ -246,12 +271,22 @@ try {
     ),
   )
 
-  check('título presente', html.includes('Minha Semana'))
-  check('7 colunas renderizadas', (html.match(/aria-label="Tarefas de /g) ?? []).length === 7)
-  check('dia de hoje destacado', html.includes('>Hoje<'))
-  check('7 formulários de adicionar', (html.match(/type="text"/g) ?? []).length === 7)
-  check('estado vazio visível', html.includes('Arraste ou adicione uma tarefa'))
-  check('resumo de tarefas', html.includes('tarefas concluídas'))
+  check('Painel Geral renderiza na rota inicial', html.includes('Painel Geral'))
+  check('tarefas de hoje no painel', html.includes('Tarefas de hoje'))
+  check('eventos de hoje no painel', html.includes('Eventos de hoje'))
+  check('lista de TO DOs no painel', html.includes('TO DOs'))
+  check('mural de post-its no painel', html.includes('Post-its'))
+  check('gasto rápido usa a data atual sem pedir data', !html.includes('type="date"'))
+
+  const weeklyHtml = renderToString(
+    React.createElement(MemoryRouter, { initialEntries: ['/semanal'] }, React.createElement(App)),
+  )
+  check('Planejamento Semanal renderiza na nova rota', weeklyHtml.includes('Minha Semana'))
+  check('7 colunas renderizadas', (weeklyHtml.match(/aria-label="Tarefas de /g) ?? []).length === 7)
+  check('dia de hoje destacado', weeklyHtml.includes('>Hoje<'))
+  check('7 formulários de adicionar', (weeklyHtml.match(/type="text"/g) ?? []).length === 7)
+  check('estado vazio visível', weeklyHtml.includes('Arraste ou adicione uma tarefa'))
+  check('resumo de tarefas', weeklyHtml.includes('tarefas concluídas'))
 
   const monthlyHtml = renderToString(
     React.createElement(MemoryRouter, { initialEntries: ['/mensal'] }, React.createElement(App)),
@@ -262,7 +297,7 @@ try {
     React.createElement(MemoryRouter, { initialEntries: ['/metas'] }, React.createElement(App)),
   )
 
-  const dashboardHtml = renderToString(
+  const financeDashboardHtml = renderToString(
     React.createElement(
       MemoryRouter,
       { initialEntries: ['/visualizacao-financeira'] },
@@ -271,7 +306,7 @@ try {
   )
   check(
     'rota de visualização financeira renderiza',
-    dashboardHtml.includes('Visualização Financeira') || dashboardHtml.includes('Carregando movimentações'),
+    financeDashboardHtml.includes('Visualização Financeira') || financeDashboardHtml.includes('Carregando movimentações'),
   )
   check(
     'rota de metas renderiza carregamento',

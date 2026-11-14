@@ -73,6 +73,142 @@ export function mapTransaction(row) {
   }
 }
 
+const STICKY_NOTE_COLORS = new Set(['yellow', 'pink', 'blue', 'green', 'orange'])
+
+function mapTodo(row) {
+  return {
+    id: row.id,
+    title: row.title,
+    done: Boolean(row.done),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+function mapStickyNote(row) {
+  return {
+    id: row.id,
+    content: row.content,
+    color: row.color,
+    positionX: row.position_x,
+    positionY: row.position_y,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+function queryTodos(userId) {
+  return db.prepare(`
+    SELECT id, title, done, created_at, updated_at
+    FROM todos
+    WHERE user_id = ?
+    ORDER BY done, created_at, id
+  `).all(userId).map(mapTodo)
+}
+
+export function listTodos(userId) {
+  return queryTodos(userId)
+}
+
+export function createTodo(userId, input) {
+  const title = typeof input?.title === 'string' ? input.title.trim() : ''
+  if (!title || title.length > 200) {
+    throw new Error('title é obrigatório e deve ter até 200 caracteres')
+  }
+
+  const timestamp = nowIso()
+  db.prepare(`
+    INSERT INTO todos (id, user_id, title, done, created_at, updated_at)
+    VALUES (?, ?, ?, 0, ?, ?)
+  `).run(randomUUID(), userId, title, timestamp, timestamp)
+  return queryTodos(userId)
+}
+
+function getTodo(userId, id) {
+  return db.prepare('SELECT * FROM todos WHERE id = ? AND user_id = ?').get(id, userId)
+}
+
+export function toggleTodo(userId, id) {
+  const todo = getTodo(userId, id)
+  if (!todo) throw new Error('TO DO não encontrado')
+  db.prepare('UPDATE todos SET done = ?, updated_at = ? WHERE id = ?')
+    .run(todo.done ? 0 : 1, nowIso(), id)
+  return queryTodos(userId)
+}
+
+export function deleteTodo(userId, id) {
+  const result = db.prepare('DELETE FROM todos WHERE id = ? AND user_id = ?').run(id, userId)
+  if (result.changes === 0) throw new Error('TO DO não encontrado')
+  return queryTodos(userId)
+}
+
+function queryStickyNotes(userId) {
+  return db.prepare(`
+    SELECT id, content, color, position_x, position_y, created_at, updated_at
+    FROM sticky_notes
+    WHERE user_id = ?
+    ORDER BY created_at, id
+  `).all(userId).map(mapStickyNote)
+}
+
+export function listStickyNotes(userId) {
+  return queryStickyNotes(userId)
+}
+
+function normalizeNotePosition(value) {
+  const position = Number(value)
+  if (!Number.isFinite(position)) return null
+  return Math.max(0, Math.min(100, position))
+}
+
+export function createStickyNote(userId, input) {
+  const content = typeof input?.content === 'string' ? input.content.trim() : ''
+  const color = input?.color ?? 'yellow'
+  const positionX = normalizeNotePosition(input?.positionX ?? 8)
+  const positionY = normalizeNotePosition(input?.positionY ?? 8)
+  if (!content || content.length > 500) throw new Error('content é obrigatório e deve ter até 500 caracteres')
+  if (!STICKY_NOTE_COLORS.has(color)) throw new Error('Cor de post-it inválida')
+  if (positionX === null || positionY === null) throw new Error('Posição de post-it inválida')
+
+  const timestamp = nowIso()
+  db.prepare(`
+    INSERT INTO sticky_notes (
+      id, user_id, content, color, position_x, position_y, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(randomUUID(), userId, content, color, positionX, positionY, timestamp, timestamp)
+  return queryStickyNotes(userId)
+}
+
+function getStickyNote(userId, id) {
+  return db.prepare('SELECT * FROM sticky_notes WHERE id = ? AND user_id = ?').get(id, userId)
+}
+
+export function updateStickyNote(userId, id, input) {
+  const note = getStickyNote(userId, id)
+  if (!note) throw new Error('Post-it não encontrado')
+  const payload = input ?? {}
+  const content = payload.content === undefined ? note.content : String(payload.content).trim()
+  const color = payload.color === undefined ? note.color : payload.color
+  const positionX = payload.positionX === undefined ? note.position_x : normalizeNotePosition(payload.positionX)
+  const positionY = payload.positionY === undefined ? note.position_y : normalizeNotePosition(payload.positionY)
+  if (!content || content.length > 500) throw new Error('content deve ter entre 1 e 500 caracteres')
+  if (!STICKY_NOTE_COLORS.has(color)) throw new Error('Cor de post-it inválida')
+  if (positionX === null || positionY === null) throw new Error('Posição de post-it inválida')
+
+  db.prepare(`
+    UPDATE sticky_notes
+    SET content = ?, color = ?, position_x = ?, position_y = ?, updated_at = ?
+    WHERE id = ?
+  `).run(content, color, positionX, positionY, nowIso(), id)
+  return queryStickyNotes(userId)
+}
+
+export function deleteStickyNote(userId, id) {
+  const result = db.prepare('DELETE FROM sticky_notes WHERE id = ? AND user_id = ?').run(id, userId)
+  if (result.changes === 0) throw new Error('Post-it não encontrado')
+  return queryStickyNotes(userId)
+}
+
 export function ensurePlan(userId, weekStart) {
   const existing = db.prepare(`
     SELECT id, week_start, created_at, updated_at
